@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinix (FR) 1.7 — Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .section-tabs{display:flex;gap:.5rem;margin-bottom:1.75rem;flex-wrap:wrap;}
+    .stab{padding:.55rem 1.1rem;border:1px solid var(--border);border-radius:99px;background:var(--surface);color:var(--muted);cursor:pointer;font-size:.85rem;font-weight:600;transition:all .2s;font-family:inherit;}
+    .stab.active{background:linear-gradient(135deg,var(--accent),var(--pink));border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(124,92,252,.35);}
+    .section{display:none;}.section.active{display:block;}
+    .log-item{display:flex;align-items:flex-start;gap:.75rem;padding:.7rem .85rem;border-radius:9px;border:1px solid var(--border);margin-bottom:.5rem;background:rgba(255,255,255,.02);font-size:.82rem;}
+    .log-icon{font-size:1.1rem;flex-shrink:0;margin-top:.05rem;}
+    .log-time{color:var(--muted);font-size:.75rem;white-space:nowrap;}
+    .log-badge{padding:.15rem .5rem;border-radius:99px;font-size:.7rem;font-weight:700;flex-shrink:0;}
+    .log-login{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);}
+    .log-fail{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);}
+    .log-register{background:rgba(124,92,252,.12);color:var(--accent2);border:1px solid rgba(124,92,252,.25);}
+    .log-ddos{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
+    .log-upload{background:rgba(6,182,212,.1);color:#67e8f9;border:1px solid rgba(6,182,212,.25);}
+    .log-download{background:rgba(245,158,11,.1);color:#fcd34d;border:1px solid rgba(245,158,11,.25);}
+    .user-row{display:flex;align-items:center;gap:1rem;padding:.85rem 1rem;border-radius:10px;border:1px solid var(--border);margin-bottom:.6rem;background:rgba(255,255,255,.02);transition:border-color .2s;}
+    .user-row:hover{border-color:rgba(124,92,252,.3);}
+    .user-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;font-weight:700;color:#fff;}
+    .user-info{flex:1;min-width:0;}
+    .user-email{font-weight:700;font-size:.9rem;}
+    .user-meta{font-size:.75rem;color:var(--muted);margin-top:.1rem;}
+    .pw-cell{font-family:monospace;background:rgba(255,255,255,.06);border-radius:6px;padding:.2rem .5rem;font-size:.8rem;cursor:pointer;user-select:all;border:1px solid var(--border);}
+    .ip-cell{font-family:monospace;font-size:.78rem;color:var(--cyan,#67e8f9);}
+    .session-row{display:flex;align-items:center;gap:1rem;padding:.7rem 1rem;border-radius:9px;border:1px solid var(--border);margin-bottom:.5rem;background:rgba(255,255,255,.02);font-size:.82rem;}
+    .online-dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success);flex-shrink:0;}
+    .stat-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.75rem;}
+    .stat-card{background:var(--surface);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;transition:border-color .2s,transform .2s;}
+    .stat-card:hover{border-color:rgba(124,92,252,.4);transform:translateY(-2px);}
+    .stat-card-num{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .stat-card-label{color:var(--muted);font-size:.78rem;margin-top:.1rem;}
+    .filter-bar{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;}
+    .filter-bar select,.filter-bar input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.45rem .75rem;color:var(--text);font-size:.82rem;outline:none;font-family:inherit;}
+    .filter-bar select:focus,.filter-bar input:focus{border-color:var(--accent);}
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="grid-overlay"></div>
+
+<header>
+  <div class="header-inner">
+    <a href="/index.html" class="logo">
+      <img src="/sinix-logo.png" alt="Sinix" style="width:38px;height:38px;border-radius:10px;box-shadow:0 0 20px rgba(124,92,252,.5);object-fit:cover" />
+      Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 1.7</span>
+    </a>
+    <nav>
+      <a href="/index.html">Fichiers</a>
+      <a href="/settings.html">Paramètres</a>
+      <a href="/admin.html" class="active">Admin</a>
+      <div class="user-pill" id="user-pill" style="display:none">
+        <span class="user-dot"></span><span id="user-email">—</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </nav>
+  </div>
+</header>
+
+<div class="admin-wrap">
+  <div class="admin-title">🛠️ Panneau d'administration</div>
+
+  <!-- Stats rapides -->
+  <div class="stat-cards">
+    <div class="stat-card"><div class="stat-card-num" id="s-files">0</div><div class="stat-card-label">📁 Fichiers</div></div>
+    <div class="stat-card"><div class="stat-card-num" id="s-users">0</div><div class="stat-card-label">👤 Utilisateurs</div></div>
+    <div class="stat-card"><div class="stat-card-num" id="s-sessions">0</div><div class="stat-card-label">🟢 Connectés</div></div>
+    <div class="stat-card"><div class="stat-card-num" id="s-dl">0</div><div class="stat-card-label">⬇️ Téléchargements</div></div>
+    <div class="stat-card"><div class="stat-card-num" id="s-alerts">0</div><div class="stat-card-label">🚨 Alertes DDoS</div></div>
+  </div>
+
+  <!-- Navigation sections -->
+  <div class="section-tabs">
+    <button class="stab active" onclick="showSection('upload',this)">📤 Upload</button>
+    <button class="stab"        onclick="showSection('files',this)">📁 Fichiers</button>
+    <button class="stab"        onclick="showSection('users',this)">👤 Utilisateurs</button>
+    <button class="stab"        onclick="showSection('sessions',this)">🟢 Sessions</button>
+    <button class="stab"        onclick="showSection('logs',this)">📋 Logs</button>
+  </div>
+
+  <!-- ── SECTION UPLOAD ── -->
+  <div id="sec-upload" class="section active card">
+    <div class="card-title">📤 Uploader un fichier</div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()"
+         ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
+      <div class="dropzone-icon">📂</div>
+      <p>Glisse un fichier ici ou <strong>clique pour choisir</strong></p>
+      <p style="font-size:.8rem;margin-top:.4rem">♾️ Taille illimitée — tous types acceptés</p>
+    </div>
+    <input type="file" id="file-input" style="display:none" onchange="onFileSelected(this)" />
+    <div id="sel-file" style="display:none;margin-top:1rem;padding:.85rem 1rem;background:rgba(124,92,252,.07);border-radius:10px;border:1px solid rgba(124,92,252,.2)">
+      <span id="sel-name" style="font-weight:700"></span>
+      <span id="sel-size" style="color:var(--muted);font-size:.82rem;margin-left:.5rem"></span>
+    </div>
+
+    <!-- Vignette personnalisée -->
+    <div style="margin-top:1.25rem">
+      <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">🖼️ Vignette personnalisée <span style="color:var(--muted);font-weight:400;text-transform:none">(optionnel)</span></div>
+      <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+        <div id="thumb-preview" onclick="document.getElementById('thumb-input').click()"
+          style="width:140px;height:100px;border-radius:10px;border:2px dashed rgba(124,92,252,.3);background:rgba(124,92,252,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s;position:relative"
+          onmouseover="this.style.borderColor='rgba(124,92,252,.6)'" onmouseout="this.style.borderColor='rgba(124,92,252,.3)'">
+          <span id="thumb-placeholder" style="font-size:2rem">🖼️</span>
+          <span style="font-size:.72rem;color:var(--muted);margin-top:.3rem" id="thumb-hint">Cliquer pour choisir</span>
+          <img id="thumb-img" src="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
+        </div>
+        <div style="flex:1;min-width:180px">
+          <p style="color:var(--muted);font-size:.82rem;margin-bottom:.5rem">Ajoute une image de couverture pour ce fichier. Elle sera affichée à la place de l'icône générique.</p>
+          <button type="button" id="thumb-clear-btn" onclick="clearThumb()" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:.35rem .75rem;border-radius:7px;font-size:.78rem;cursor:pointer">✕ Retirer la vignette</button>
+        </div>
+      </div>
+      <input type="file" id="thumb-input" accept="image/*" style="display:none" onchange="onThumbSelected(this)" />
+    </div>
+    <div style="margin-top:1.25rem">
+      <div class="form-row">
+        <div class="form-group"><label>Description</label><textarea id="f-desc" placeholder="Décris ce fichier..."></textarea></div>
+        <div class="form-group"><label>Catégorie</label>
+          <select id="f-cat">
+            <option>Général</option><option>Logiciels</option><option>Images</option>
+            <option>Documents</option><option>Musique</option><option>Vidéos</option>
+            <option>Archives</option><option>Code</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-text" id="progress-text">Upload en cours...</div>
+    </div>
+    <button class="btn btn-primary" id="upload-btn" onclick="doUpload()" style="margin-top:1.25rem" disabled>⬆️ Uploader</button>
+    <div class="alert alert-success" id="up-ok">✅ Fichier uploadé !</div>
+    <div class="alert alert-error"   id="up-err"></div>
+  </div>
+
+  <!-- ── SECTION FILES ── -->
+  <div id="sec-files" class="section card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>📁 Fichiers en ligne — <span id="file-count">0</span></span>
+    </div>
+    <div id="admin-file-list"></div>
+  </div>
+
+  <!-- ── SECTION USERS ── -->
+  <div id="sec-users" class="section card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>👤 Comptes utilisateurs — <span id="user-count">0</span></span>
+      <button class="btn" style="background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);padding:.4rem .8rem;font-size:.8rem;border-radius:8px" onclick="loadUsers()">↻ Rafraîchir</button>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="user-search" placeholder="🔍 Chercher un email..." oninput="filterUsers()" style="flex:1;min-width:180px"/>
+    </div>
+    <div id="user-list"></div>
+  </div>
+
+  <!-- ── SECTION SESSIONS ── -->
+  <div id="sec-sessions" class="section card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>🟢 Sessions actives — <span id="session-count">0</span></span>
+      <button class="btn" style="background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);padding:.4rem .8rem;font-size:.8rem;border-radius:8px" onclick="loadSessions()">↻ Rafraîchir</button>
+    </div>
+    <div id="session-list"></div>
+  </div>
+
+  <!-- ── SECTION LOGS ── -->
+  <div id="sec-logs" class="section card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>📋 Journal d'activité — <span id="log-count">0</span> entrées</span>
+      <button class="btn" style="background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);padding:.4rem .8rem;font-size:.8rem;border-radius:8px" onclick="loadLogs()">↻ Rafraîchir</button>
+    </div>
+    <div class="filter-bar">
+      <select id="log-filter" onchange="renderLogs()">
+        <option value="all">Tous les types</option>
+        <option value="login">✅ Connexions</option>
+        <option value="login_fail">❌ Échecs connexion</option>
+        <option value="register">📝 Inscriptions</option>
+        <option value="upload">📤 Uploads</option>
+        <option value="download">⬇️ Téléchargements</option>
+        <option value="ddos">🚨 DDoS / brute force / VPN</option>
+      </select>
+    </div>
+    <div id="log-list"></div>
+  </div>
+
+</div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ── Particles ── */
+const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');let pts=[];
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
+function P(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.r=Math.random()*1.4+.3;this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;this.a=Math.random()*.5+.1;this.h=[260,300,180][Math.floor(Math.random()*3)];}
+P.prototype.tick=function(){this.x+=this.vx;this.y+=this.vy;if(this.x<0)this.x=canvas.width;if(this.x>canvas.width)this.x=0;if(this.y<0)this.y=canvas.height;if(this.y>canvas.height)this.y=0;};
+P.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`hsla(${this.h},90%,70%,${this.a})`;ctx.fill();};
+for(let i=0;i<100;i++)pts.push(new P());
+(function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(124,92,252,${.12*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}pts.forEach(p=>{p.tick();p.draw();});requestAnimationFrame(loop);})();
+
+/* ── Auth ── */
+let TOKEN='';
+async function checkAuth(){
+  const t=localStorage.getItem('fs_token');
+  if(!t){window.location.href='/login.html';return;}
+  const r=await fetch('/api/auth-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});
+  const d=await r.json();
+  if(!d.ok||!d.isAdmin){alert('Accès refusé. Admin seulement.');window.location.href='/login.html';return;}
+  TOKEN=t;
+  document.getElementById('user-email').textContent=d.email;
+  document.getElementById('user-pill').style.display='flex';
+  loadAll();
+}
+
+async function logout(){
+  await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
+  localStorage.clear();window.location.href='/login.html';
+}
+
+function hdr(){ return {'Content-Type':'application/json','x-token':TOKEN}; }
+
+/* ── Load all ── */
+async function loadAll(){ await Promise.all([loadFiles(),loadUsers(),loadSessions(),loadLogs()]); }
+
+/* ── Section switch ── */
+function showSection(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── Upload ── */
+let selFile=null, selThumb=null;
+function dragOver(e){e.preventDefault();document.getElementById('dropzone').classList.add('dragover');}
+function dragLeave(){document.getElementById('dropzone').classList.remove('dragover');}
+function dropFile(e){e.preventDefault();dragLeave();if(e.dataTransfer.files[0])pickFile(e.dataTransfer.files[0]);}
+function onFileSelected(i){if(i.files[0])pickFile(i.files[0]);}
+function pickFile(f){selFile=f;document.getElementById('sel-name').textContent=f.name;document.getElementById('sel-size').textContent=fmtSz(f.size);document.getElementById('sel-file').style.display='block';document.getElementById('upload-btn').disabled=false;hideAlerts();}
+
+function onThumbSelected(inp){
+  if(!inp.files[0])return;
+  selThumb=inp.files[0];
+  const url=URL.createObjectURL(selThumb);
+  document.getElementById('thumb-img').src=url;
+  document.getElementById('thumb-img').style.display='block';
+  document.getElementById('thumb-placeholder').style.display='none';
+  document.getElementById('thumb-hint').style.display='none';
+  document.getElementById('thumb-clear-btn').style.display='inline-block';
+}
+
+function clearThumb(){
+  selThumb=null;
+  document.getElementById('thumb-img').src='';
+  document.getElementById('thumb-img').style.display='none';
+  document.getElementById('thumb-placeholder').style.display='block';
+  document.getElementById('thumb-hint').style.display='block';
+  document.getElementById('thumb-clear-btn').style.display='none';
+  document.getElementById('thumb-input').value='';
+}
+
+async function doUpload(){
+  if(!selFile)return;
+  const fd=new FormData();
+  fd.append('file',selFile);
+  fd.append('token',TOKEN);
+  if(selThumb) fd.append('thumbnail',selThumb);
+  fd.append('description',document.getElementById('f-desc').value);
+  fd.append('category',document.getElementById('f-cat').value);
+  document.getElementById('upload-btn').disabled=true;
+  document.getElementById('progress-wrap').style.display='block';hideAlerts();
+  const xhr=new XMLHttpRequest();xhr.open('POST','/api/upload');
+  xhr.upload.onprogress=e=>{if(e.lengthComputable){const p=Math.round(e.loaded/e.total*100);document.getElementById('progress-fill').style.width=p+'%';document.getElementById('progress-text').textContent='Upload... '+p+'%';}};
+  xhr.onload=()=>{document.getElementById('progress-wrap').style.display='none';
+    try{const d=JSON.parse(xhr.responseText);
+      if(xhr.status===200&&d.ok){document.getElementById('up-ok').style.display='block';selFile=null;selThumb=null;document.getElementById('sel-file').style.display='none';document.getElementById('f-desc').value='';document.getElementById('progress-fill').style.width='0%';document.getElementById('upload-btn').disabled=true;clearThumb();loadFiles();showToast('Fichier uploadé !');}
+      else{document.getElementById('up-err').textContent='❌ '+(d.error||'Erreur');document.getElementById('up-err').style.display='block';document.getElementById('upload-btn').disabled=false;}
+    }catch(e){document.getElementById('upload-btn').disabled=false;}};
+  xhr.send(fd);
+}
+
+function hideAlerts(){document.getElementById('up-ok').style.display='none';document.getElementById('up-err').style.display='none';}
+
+/* ── Files ── */
+async function loadFiles(){
+  const r=await fetch('/api/files');const f=await r.json();
+  document.getElementById('file-count').textContent=f.length;
+  document.getElementById('s-files').textContent=f.length;
+  const total=f.reduce((s,x)=>s+(x.downloads||0),0);
+  document.getElementById('s-dl').textContent=total;
+  const list=document.getElementById('admin-file-list');
+  if(!f.length){list.innerHTML=`<div class="empty" style="padding:2rem"><div class="empty-icon" style="font-size:2rem">📭</div><p>Aucun fichier.</p></div>`;return;}
+  list.innerHTML=f.map(x=>`
+    <div class="admin-file-item" id="afile-${x.id}">
+      ${x.isImage?`<img src="/uploads/${x.filename}" style="width:52px;height:40px;object-fit:cover;border-radius:7px;flex-shrink:0"/>`:`<div class="admin-file-icon">${fileIcon(x)}</div>`}
+      <div class="admin-file-info">
+        <div class="admin-file-name" title="${x.originalName}">${x.originalName}</div>
+        <div class="admin-file-meta">${x.category} · ${fmtSz(x.size)} · ⬇️ ${x.downloads} · ${fmtDt(x.uploadedAt)}</div>
+      </div>
+      <a href="/api/download/${x.id}" style="color:var(--accent2);font-size:.8rem;text-decoration:none;margin-right:.25rem">↓ Lien</a>
+      <button class="btn btn-danger" onclick="delFile('${x.id}')">🗑️</button>
+    </div>`).join('');
+}
+
+async function delFile(id){
+  if(!confirm('Supprimer ce fichier ?'))return;
+  const r=await fetch(`/api/files/${id}`,{method:'DELETE',headers:hdr(),body:JSON.stringify({token:TOKEN})});
+  const d=await r.json();if(d.ok){loadFiles();showToast('Supprimé','error');}
+}
+</script>
+
+<script>
+/* ── Users ── */
+let allUsers=[];
+async function loadUsers(){
+  const r=await fetch('/api/admin/users',{headers:hdr()});allUsers=await r.json();
+  document.getElementById('user-count').textContent=allUsers.length;
+  document.getElementById('s-users').textContent=allUsers.length;
+  filterUsers();
+}
+
+function filterUsers(){
+  const q=document.getElementById('user-search').value.toLowerCase();
+  const f=q?allUsers.filter(u=>u.email.toLowerCase().includes(q)||u.ip.includes(q)):allUsers;
+  renderUsers(f);
+}
+
+function renderUsers(users){
+  const list=document.getElementById('user-list');
+  if(!users.length){list.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--muted)">Aucun utilisateur.</div>`;return;}
+  list.innerHTML=users.map(u=>{
+    const av=u.email[0].toUpperCase();
+    const lastLogin=u.lastLogin?fmtDtFull(u.lastLogin):'Jamais connecté';
+    return`<div class="user-row" id="urow-${u.id}">
+      <div class="user-avatar">${av}</div>
+      <div class="user-info">
+        <div class="user-email">${u.email}</div>
+        <div class="user-meta">
+          📅 Inscrit le ${fmtDt(u.createdAt)} &nbsp;·&nbsp;
+          🕐 Dernière co : ${lastLogin} &nbsp;·&nbsp;
+          🔢 ${u.loginCount} connexion(s)
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end;flex-shrink:0">
+        <span class="ip-cell">🌐 ${u.ip||'?'}</span>
+        <span class="pw-cell" title="Cliquer pour copier" onclick="copyText('${u.password.replace(/'/g,"\\'")}',this)">
+          🔑 ${u.password}
+        </span>
+      </div>
+      <button class="btn btn-danger" onclick="delUser('${u.id}')" style="flex-shrink:0">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+async function delUser(id){
+  if(!confirm('Supprimer cet utilisateur ?'))return;
+  const r=await fetch(`/api/admin/users/${id}`,{method:'DELETE',headers:hdr(),body:JSON.stringify({token:TOKEN})});
+  const d=await r.json();if(d.ok){loadUsers();showToast('Utilisateur supprimé','error');}
+}
+
+function copyText(txt,el){navigator.clipboard.writeText(txt);const o=el.textContent;el.textContent='✅ Copié !';setTimeout(()=>el.textContent=o,1500);}
+
+/* ── Sessions ── */
+async function loadSessions(){
+  const r=await fetch('/api/admin/sessions',{headers:hdr()});const s=await r.json();
+  document.getElementById('session-count').textContent=s.length;
+  document.getElementById('s-sessions').textContent=s.length;
+  const list=document.getElementById('session-list');
+  if(!s.length){list.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--muted)">Aucune session active.</div>`;return;}
+  list.innerHTML=s.map(x=>`
+    <div class="session-row">
+      <div class="online-dot"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.88rem">${x.email}</div>
+        <div style="font-size:.75rem;color:var(--muted)">Token : ${x.token} &nbsp;·&nbsp; Connecté le ${fmtDtFull(new Date(x.createdAt).toISOString())}</div>
+      </div>
+      <span class="ip-cell">🌐 ${x.ip||'?'}</span>
+      ${x.isAdmin?'<span class="badge" style="background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.3)">ADMIN</span>':'<span class="badge">USER</span>'}
+    </div>`).join('');
+}
+
+/* ── Logs ── */
+let allLogs=[];
+async function loadLogs(){
+  const r=await fetch('/api/admin/logs',{headers:hdr()});allLogs=await r.json();
+  document.getElementById('log-count').textContent=allLogs.length;
+  const ddos=allLogs.filter(l=>l.type==='ddos'||l.type==='bruteforce').length;
+  document.getElementById('s-alerts').textContent=ddos;
+  renderLogs();
+}
+
+function renderLogs(){
+  const filter=document.getElementById('log-filter').value;
+  const logs=filter==='all'?allLogs:
+    filter==='ddos'?allLogs.filter(l=>l.type==='ddos'||l.type==='bruteforce'):
+    allLogs.filter(l=>l.type===filter);
+  const list=document.getElementById('log-list');
+  if(!logs.length){list.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--muted)">Aucun log.</div>`;return;}
+  list.innerHTML=logs.slice(0,200).map(l=>{
+    const {icon:ic,label,cls}=logMeta(l.type);
+    const details=logDetails(l);
+    return`<div class="log-item">
+      <span class="log-icon">${ic}</span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <span class="log-badge ${cls}">${label}</span>
+          <span style="color:var(--text);font-weight:600">${details}</span>
+        </div>
+        ${l.ip?`<div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">🌐 IP : ${l.ip}</div>`:''}
+      </div>
+      <span class="log-time">${fmtDtFull(l.at)}</span>
+    </div>`;
+  }).join('');
+}
+
+function logMeta(type){
+  const m={
+    login:      {icon:'✅',label:'Connexion',      cls:'log-login'},
+    login_fail: {icon:'❌',label:'Échec co.',      cls:'log-fail'},
+    register:   {icon:'📝',label:'Inscription',    cls:'log-register'},
+    upload:     {icon:'📤',label:'Upload',          cls:'log-upload'},
+    download:   {icon:'⬇️',label:'Téléchargement', cls:'log-download'},
+    ddos:       {icon:'🚨',label:'DDoS',            cls:'log-ddos'},
+    bruteforce: {icon:'🔴',label:'Brute force',     cls:'log-ddos'},
+    vpn_block:  {icon:'🛡️',label:'VPN bloqué',      cls:'log-ddos'},
+  };
+  return m[type]||{icon:'📋',label:type,cls:'log-login'};
+}
+
+function logDetails(l){
+  if(l.type==='login'||l.type==='login_fail'||l.type==='register') return l.email||'?';
+  if(l.type==='upload') return l.fileName||'?';
+  if(l.type==='download') return l.fileName||l.fileId||'?';
+  if(l.type==='ddos'||l.type==='bruteforce') return `Tentative sur ${l.path||'login'}`;
+  return '';
+}
+
+/* ── Helpers ── */
+const FICONS={pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜️',rar:'🗜️','7z':'🗜️',mp4:'🎬',mkv:'🎬',avi:'🎬',mp3:'🎵',wav:'🎵',exe:'⚙️',msi:'⚙️'};
+function fileIcon(f){if(f.isImage)return'🖼️';const e=f.originalName.split('.').pop().toLowerCase();return FICONS[e]||'📦';}
+function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function fmtDt(iso){return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtDtFull(iso){return new Date(iso).toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function showToast(msg,type='success'){const w=document.getElementById('toasts');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=(type==='success'?'✅ ':'🗑️ ')+msg;w.appendChild(t);setTimeout(()=>t.remove(),3500);}
+
+checkAuth();
+</script>
+</body>
+</html>

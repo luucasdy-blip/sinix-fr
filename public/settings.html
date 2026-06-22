@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinix (FR) 1.7 — Paramètres</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .settings-wrap { max-width: 800px; margin: 0 auto; padding: 2rem; }
+    .settings-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 1.75rem; letter-spacing: -.03em; }
+
+    /* Profile card top */
+    .profile-card {
+      background: linear-gradient(135deg, rgba(124,92,252,.15), rgba(236,72,153,.1));
+      border: 1px solid rgba(124,92,252,.3);
+      border-radius: 20px;
+      padding: 2rem;
+      display: flex; align-items: center; gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      position: relative; overflow: hidden;
+    }
+    .profile-card::before {
+      content:''; position:absolute; inset:0;
+      background: linear-gradient(135deg, rgba(124,92,252,.05), transparent);
+      pointer-events: none;
+    }
+    .avatar-big {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 900; color: #fff;
+      box-shadow: 0 0 30px rgba(124,92,252,.5);
+      flex-shrink: 0;
+    }
+    .profile-info h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .25rem; }
+    .profile-info p  { color: var(--muted); font-size: .88rem; }
+    .profile-badge {
+      margin-left: auto; flex-shrink: 0;
+      background: rgba(34,197,94,.1); color: #4ade80;
+      border: 1px solid rgba(34,197,94,.3);
+      padding: .35rem .9rem; border-radius: 99px;
+      font-size: .78rem; font-weight: 700;
+    }
+
+    /* Info grid */
+    .info-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .info-tile {
+      background: var(--surface); backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .info-tile:hover { border-color: rgba(124,92,252,.35); transform: translateY(-2px); }
+    .info-tile-label { font-size: .73rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .4rem; }
+    .info-tile-value { font-size: 1rem; font-weight: 700; color: var(--text); word-break: break-all; }
+    .info-tile-value.mono { font-family: monospace; font-size: .88rem; }
+    .info-tile-value.green { color: #4ade80; }
+    .info-tile-value.purple { color: var(--accent2); }
+    .info-tile-value.cyan { color: #67e8f9; }
+
+    /* Section cards */
+    .s-card { background: var(--surface); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.25rem; }
+    .s-card-title { font-size: .78rem; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.25rem; display: flex; align-items: center; gap: .5rem; }
+
+    /* Log timeline */
+    .log-line { display: flex; align-items: center; gap: .75rem; padding: .6rem .75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: .5rem; font-size: .82rem; background: rgba(255,255,255,.02); }
+    .log-line:hover { border-color: rgba(124,92,252,.2); }
+    .log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green  { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .dot-red    { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+    .dot-purple { background: #7c5cfc; box-shadow: 0 0 6px #7c5cfc; }
+    .dot-blue   { background: #06b6d4; box-shadow: 0 0 6px #06b6d4; }
+    .dot-yellow { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+
+    /* Danger zone */
+    .danger-zone { border-color: rgba(239,68,68,.25) !important; }
+    .danger-zone .s-card-title { color: #f87171; }
+
+    /* Password reveal */
+    .pw-reveal {
+      display: flex; align-items: center; gap: .5rem;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 8px; padding: .6rem .9rem; font-family: monospace;
+      font-size: .9rem; cursor: pointer; user-select: none;
+      transition: border-color .2s;
+    }
+    .pw-reveal:hover { border-color: rgba(124,92,252,.4); }
+
+    /* inline success/error */
+    .inline-msg { font-size: .82rem; margin-top: .5rem; padding: .5rem .75rem; border-radius: 7px; display: none; }
+    .inline-ok  { background: rgba(34,197,94,.1); color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+    .inline-err { background: rgba(239,68,68,.1); color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+
+    @media (max-width: 600px) {
+      .profile-card { flex-direction: column; text-align: center; }
+      .profile-badge { margin: 0; }
+      .info-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="grid-overlay"></div>
+
+<header>
+  <div class="header-inner">
+    <a href="/index.html" class="logo">
+      <img src="/sinix-logo.png" alt="Sinix" style="width:38px;height:38px;border-radius:10px;box-shadow:0 0 20px rgba(124,92,252,.5);object-fit:cover" />
+      Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 1.7</span>
+    </a>
+    <nav>
+      <a href="/index.html">Fichiers</a>
+      <a href="/settings.html" class="active">Paramètres</a>
+      <div class="user-pill" id="user-pill" style="display:none">
+        <span class="user-dot"></span><span id="user-email-nav">—</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </nav>
+  </div>
+</header>
+
+<div class="settings-wrap">
+  <div class="settings-title">⚙️ Mes paramètres</div>
+
+  <!-- Profile card -->
+  <div class="profile-card">
+    <div class="avatar-big" id="avatar-letter">?</div>
+    <div class="profile-info">
+      <h2 id="profile-email">Chargement...</h2>
+      <p id="profile-sub">Membre depuis —</p>
+    </div>
+    <div class="profile-badge">✅ Compte actif</div>
+  </div>
+
+  <!-- Info tiles -->
+  <div class="info-grid">
+    <div class="info-tile">
+      <div class="info-tile-label">📧 Adresse email</div>
+      <div class="info-tile-value" id="tile-email">—</div>
+    </div>
+    <div class="info-tile">
+      <div class="info-tile-label">🌐 Dernière IP</div>
+      <div class="info-tile-value mono cyan" id="tile-ip">—</div>
+    </div>
+    <div class="info-tile">
+      <div class="info-tile-label">📅 Membre depuis</div>
+      <div class="info-tile-value green" id="tile-created">—</div>
+    </div>
+    <div class="info-tile">
+      <div class="info-tile-label">🕐 Dernière connexion</div>
+      <div class="info-tile-value" id="tile-lastlogin">—</div>
+    </div>
+    <div class="info-tile">
+      <div class="info-tile-label">🔢 Nb de connexions</div>
+      <div class="info-tile-value purple" id="tile-count">—</div>
+    </div>
+    <div class="info-tile">
+      <div class="info-tile-label">🔑 Mot de passe</div>
+      <div class="pw-reveal" id="pw-reveal" onclick="togglePw()" title="Cliquer pour afficher/masquer">
+        <span id="pw-text">••••••••</span>
+        <span style="color:var(--muted);font-size:.8rem">👁️</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Changer email -->
+  <div class="s-card">
+    <div class="s-card-title">✏️ Changer l'adresse email</div>
+    <div class="form-group">
+      <label>Nouvel email</label>
+      <input type="email" id="new-email" placeholder="nouveau@email.com" />
+    </div>
+    <div class="form-group">
+      <label>Confirmer le nouvel email</label>
+      <input type="email" id="new-email2" placeholder="nouveau@email.com" />
+    </div>
+    <button class="btn btn-primary" onclick="changeEmail()" style="margin-top:.25rem">
+      Mettre à jour l'email
+    </button>
+    <div class="inline-msg inline-ok"  id="email-ok">✅ Email mis à jour !</div>
+    <div class="inline-msg inline-err" id="email-err"></div>
+  </div>
+
+  <!-- Changer mot de passe -->
+  <div class="s-card">
+    <div class="s-card-title">🔒 Changer le mot de passe</div>
+    <div class="form-group">
+      <label>Mot de passe actuel</label>
+      <input type="password" id="cur-pw" placeholder="••••••••" />
+    </div>
+    <div class="form-group">
+      <label>Nouveau mot de passe</label>
+      <input type="password" id="new-pw" placeholder="••••••••" />
+    </div>
+    <div class="form-group">
+      <label>Confirmer le nouveau mot de passe</label>
+      <input type="password" id="new-pw2" placeholder="••••••••" />
+    </div>
+    <button class="btn btn-primary" onclick="changePassword()" style="margin-top:.25rem">
+      Mettre à jour le mot de passe
+    </button>
+    <div class="inline-msg inline-ok"  id="pw-ok">✅ Mot de passe mis à jour !</div>
+    <div class="inline-msg inline-err" id="pw-err"></div>
+  </div>
+
+  <!-- Historique d'activité -->
+  <div class="s-card">
+    <div class="s-card-title">📋 Mon historique d'activité</div>
+    <div id="my-logs">
+      <div style="text-align:center;padding:1.5rem;color:var(--muted)">Chargement...</div>
+    </div>
+  </div>
+
+  <!-- Support Discord -->
+  <div class="s-card" style="border-color:rgba(88,101,242,.25);background:rgba(88,101,242,.05)">
+    <div class="s-card-title" style="color:#a5b4fc">💬 Support</div>
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">
+      Tu as un problème avec ton compte ? Notre équipe est disponible sur Discord.
+    </p>
+    <a href="https://discord.gg/gyCx7Ngp" target="_blank"
+       style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,#5865f2,#7289da);color:#fff;text-decoration:none;padding:.65rem 1.5rem;border-radius:10px;font-weight:700;font-size:.9rem;box-shadow:0 4px 15px rgba(88,101,242,.35)">
+      Rejoindre le Discord →
+    </a>
+  </div>
+
+  <!-- Danger zone -->
+  <div class="s-card danger-zone">
+    <div class="s-card-title">⚠️ Zone dangereuse</div>
+    <p style="color:var(--muted);font-size:.88rem;margin-bottom:1rem">
+      La suppression de ton compte est <strong style="color:#f87171">irréversible</strong>. Toutes tes données seront effacées.
+    </p>
+    <button class="btn btn-danger" onclick="deleteAccount()" style="padding:.65rem 1.25rem;font-size:.9rem">
+      🗑️ Supprimer mon compte
+    </button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ── Particles ── */
+const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');let pts=[];
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
+function P(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.r=Math.random()*1.4+.3;this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;this.a=Math.random()*.5+.1;this.h=[260,300,180][Math.floor(Math.random()*3)];}
+P.prototype.tick=function(){this.x+=this.vx;this.y+=this.vy;if(this.x<0)this.x=canvas.width;if(this.x>canvas.width)this.x=0;if(this.y<0)this.y=canvas.height;if(this.y>canvas.height)this.y=0;};
+P.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`hsla(${this.h},90%,70%,${this.a})`;ctx.fill();};
+for(let i=0;i<80;i++)pts.push(new P());
+(function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(124,92,252,${.12*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}pts.forEach(p=>{p.tick();p.draw();});requestAnimationFrame(loop);})();
+
+/* ── Auth ── */
+let TOKEN='', myData={};
+(async()=>{
+  const t=localStorage.getItem('fs_token');
+  if(!t){window.location.href='/login.html';return;}
+  const r=await fetch('/api/auth-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});
+  const d=await r.json();
+  if(!d.ok){window.location.href='/login.html';return;}
+  TOKEN=t;
+  document.getElementById('user-email-nav').textContent=d.email;
+  document.getElementById('user-pill').style.display='flex';
+  loadMe();
+})();
+
+async function logout(){
+  await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
+  localStorage.clear();window.location.href='/login.html';
+}
+
+/* ── Load profile ── */
+async function loadMe(){
+  const r=await fetch('/api/me',{headers:{'x-token':TOKEN,'Content-Type':'application/json'}});
+  if(!r.ok){
+    const d=await r.json().catch(()=>({}));
+    showToast((d.error||'Erreur de chargement du profil'),'error');
+    return;
+  }
+  myData=await r.json();
+  renderProfile();
+  renderLogs();
+}
+
+function renderProfile(){
+  const d=myData;
+  const letter=(d.email||'?')[0].toUpperCase();
+  document.getElementById('avatar-letter').textContent=letter;
+  document.getElementById('profile-email').textContent=d.email;
+  document.getElementById('profile-sub').textContent='Membre depuis '+fmtDt(d.createdAt);
+  document.getElementById('tile-email').textContent=d.email;
+  document.getElementById('tile-ip').textContent=d.ip||'inconnue';
+  document.getElementById('tile-created').textContent=fmtDtFull(d.createdAt);
+  document.getElementById('tile-lastlogin').textContent=d.lastLogin?fmtDtFull(d.lastLogin):'Jamais';
+  document.getElementById('tile-count').textContent=d.loginCount+' connexion(s)';
+  document.getElementById('pw-text').textContent='••••••••';
+  document.getElementById('pw-text').dataset.real=d.password;
+  document.getElementById('pw-text').dataset.shown='0';
+}
+
+/* ── Password reveal ── */
+function togglePw(){
+  const el=document.getElementById('pw-text');
+  if(el.dataset.shown==='0'){el.textContent=el.dataset.real;el.dataset.shown='1';}
+  else{el.textContent='••••••••';el.dataset.shown='0';}
+}
+
+/* ── Change email ── */
+async function changeEmail(){
+  const e1=document.getElementById('new-email').value.trim();
+  const e2=document.getElementById('new-email2').value.trim();
+  if(!e1||!e2){showInline('email-err','Remplis tous les champs.');return;}
+  if(e1!==e2){showInline('email-err','Les emails ne correspondent pas.');return;}
+  const r=await fetch('/api/me/email',{method:'PATCH',headers:{'Content-Type':'application/json','x-token':TOKEN},body:JSON.stringify({newEmail:e1})});
+  const d=await r.json();
+  if(d.ok){
+    showInline('email-ok');
+    document.getElementById('new-email').value='';
+    document.getElementById('new-email2').value='';
+    localStorage.setItem('fs_email',d.email);
+    loadMe();
+    showToast('Email mis à jour !');
+  } else showInline('email-err',d.error||'Erreur');
+}
+
+/* ── Change password ── */
+async function changePassword(){
+  const cur=document.getElementById('cur-pw').value;
+  const n1=document.getElementById('new-pw').value;
+  const n2=document.getElementById('new-pw2').value;
+  if(!cur||!n1||!n2){showInline('pw-err','Remplis tous les champs.');return;}
+  if(n1!==n2){showInline('pw-err','Les mots de passe ne correspondent pas.');return;}
+  if(n1.length<6){showInline('pw-err','Minimum 6 caractères.');return;}
+  const r=await fetch('/api/me/password',{method:'PATCH',headers:{'Content-Type':'application/json','x-token':TOKEN},body:JSON.stringify({currentPassword:cur,newPassword:n1})});
+  const d=await r.json();
+  if(d.ok){
+    showInline('pw-ok');
+    document.getElementById('cur-pw').value='';
+    document.getElementById('new-pw').value='';
+    document.getElementById('new-pw2').value='';
+    loadMe();
+    showToast('Mot de passe mis à jour !');
+  } else showInline('pw-err',d.error||'Erreur');
+}
+
+/* ── Delete account ── */
+async function deleteAccount(){
+  if(!confirm('⚠️ Supprimer définitivement ton compte ? Cette action est irréversible.'))return;
+  if(!confirm('Dernière confirmation — es-tu sûr ?'))return;
+  const r=await fetch('/api/me',{method:'DELETE',headers:{'Content-Type':'application/json','x-token':TOKEN},body:JSON.stringify({token:TOKEN})});
+  const d=await r.json();
+  if(d.ok){localStorage.clear();window.location.href='/login.html';}
+}
+
+/* ── Logs ── */
+function renderLogs(){
+  const logs=myData.logs||[];
+  const wrap=document.getElementById('my-logs');
+  if(!logs.length){wrap.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--muted)">Aucune activité enregistrée.</div>`;return;}
+  const META={
+    login:          {dot:'dot-green', label:'Connexion réussie'},
+    login_fail:     {dot:'dot-red',   label:'Tentative de connexion échouée'},
+    register:       {dot:'dot-purple',label:'Inscription'},
+    email_change:   {dot:'dot-blue',  label:'Email modifié'},
+    password_change:{dot:'dot-blue',  label:'Mot de passe modifié'},
+    download:       {dot:'dot-yellow',label:'Téléchargement'},
+    account_delete: {dot:'dot-red',   label:'Suppression de compte'},
+  };
+  wrap.innerHTML=logs.map(l=>{
+    const m=META[l.type]||{dot:'dot-purple',label:l.type};
+    return`<div class="log-line">
+      <div class="log-dot ${m.dot}"></div>
+      <div style="flex:1"><span style="font-weight:600">${m.label}</span>${l.oldEmail?` <span style="color:var(--muted);font-size:.78rem">(${l.oldEmail} → ${l.email})</span>`:''}</div>
+      <span style="color:var(--muted);font-size:.75rem;white-space:nowrap">${fmtDtFull(l.at)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── Helpers ── */
+function fmtDt(iso){return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});}
+function fmtDtFull(iso){return new Date(iso).toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+
+function showInline(id,msg=''){
+  const el=document.getElementById(id);
+  if(msg)el.textContent=(id.endsWith('err')?'❌ ':'')+msg;
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none',4000);
+}
+
+function showToast(msg,type='success'){
+  const w=document.getElementById('toasts');const t=document.createElement('div');
+  t.className=`toast ${type}`;t.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;
+  w.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+</script>
+</body>
+</html>

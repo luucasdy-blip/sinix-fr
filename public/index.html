@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinix (FR) 1.7 — Fichiers</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="grid-overlay"></div>
+
+<header>
+  <div class="header-inner">
+    <a href="/index.html" class="logo">
+      <img src="/sinix-logo.png" alt="Sinix" style="width:38px;height:38px;border-radius:10px;box-shadow:0 0 20px rgba(124,92,252,.5);object-fit:cover" />
+      Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 1.7</span>
+    </a>
+    <nav>
+      <a href="/index.html" class="active">Fichiers</a>
+      <a href="/settings.html">Paramètres</a>
+      <a href="/admin.html" id="admin-link" style="display:none">Admin</a>
+      <div class="user-pill" id="user-pill">
+        <span class="user-dot"></span>
+        <span id="user-email">—</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">✨ Partage de fichiers rapide &amp; sécurisé</div>
+  <h1><span class="gradient-text">Bienvenue<br/>sur Sinix (FR)</span></h1>
+  <p>Retrouve tous les fichiers partagés ici. Clique pour télécharger ou voir les images.</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Fichiers</div></div>
+    <div class="stat"><div class="stat-num" id="stat-images">0</div><div class="stat-label">Images</div></div>
+    <div class="stat"><div class="stat-num" id="stat-dl">0</div><div class="stat-label">Téléchargements</div></div>
+  </div>
+</div>
+
+<main>
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input type="text" id="search" placeholder="Rechercher un fichier..." oninput="filterFiles()" />
+    </div>
+    <div class="filter-btns" id="cat-filters">
+      <button class="filter-btn active" onclick="setCategory('all',this)">Tous</button>
+      <button class="filter-btn" onclick="setCategory('image',this)">🖼️ Images</button>
+    </div>
+    <div class="view-btns">
+      <button class="view-btn active" id="btn-grid" onclick="setView('grid')">⊞</button>
+      <button class="view-btn"        id="btn-list" onclick="setView('list')">≡</button>
+    </div>
+  </div>
+  <div id="files-grid" class="grid-view"></div>
+
+  <!-- Discord support -->
+  <div style="text-align:center;margin-top:3rem;padding:2rem;background:rgba(88,101,242,.07);border:1px solid rgba(88,101,242,.2);border-radius:16px">
+    <div style="font-size:2rem;margin-bottom:.5rem">💬</div>
+    <div style="font-weight:700;margin-bottom:.25rem">Un problème ?</div>
+    <div style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">Notre équipe est disponible sur Discord pour t'aider.</div>
+    <a href="https://discord.gg/gyCx7Ngp" target="_blank" style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,#5865f2,#7289da);color:#fff;text-decoration:none;padding:.65rem 1.5rem;border-radius:10px;font-weight:700;font-size:.9rem;box-shadow:0 4px 15px rgba(88,101,242,.35)">
+      Rejoindre le Discord →
+    </a>
+  </div>
+</main>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
+</div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ── Particles ── */
+const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');let pts=[];
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
+function P(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.r=Math.random()*1.4+.3;this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;this.a=Math.random()*.5+.1;this.h=[260,300,180][Math.floor(Math.random()*3)];}
+P.prototype.tick=function(){this.x+=this.vx;this.y+=this.vy;if(this.x<0)this.x=canvas.width;if(this.x>canvas.width)this.x=0;if(this.y<0)this.y=canvas.height;if(this.y>canvas.height)this.y=0;};
+P.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`hsla(${this.h},90%,70%,${this.a})`;ctx.fill();};
+for(let i=0;i<100;i++)pts.push(new P());
+(function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(124,92,252,${.12*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}pts.forEach(p=>{p.tick();p.draw();});requestAnimationFrame(loop);})();
+
+/* ── Auth check ── */
+let sessionToken='';
+(async()=>{
+  const t=localStorage.getItem('fs_token');
+  if(!t){window.location.href='/login.html';return;}
+  const r=await fetch('/api/auth-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});
+  const d=await r.json();
+  if(!d.ok){window.location.href='/login.html';return;}
+  sessionToken=t;
+  document.getElementById('user-email').textContent=d.email;
+  if(d.isAdmin) document.getElementById('admin-link').style.display='';
+  loadFiles();
+})();
+
+async function logout(){
+  await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:sessionToken})});
+  localStorage.clear(); window.location.href='/login.html';
+}
+
+/* ── Files ── */
+let allFiles=[],currentCat='all',currentView='grid';
+
+async function loadFiles(){
+  try{const r=await fetch('/api/files');allFiles=await r.json();updateStats();filterFiles();buildCats();}
+  catch(e){showToast('Erreur de chargement','error');}
+}
+
+function updateStats(){
+  animNum('stat-total', allFiles.length);
+  animNum('stat-images', allFiles.filter(f=>f.isImage).length);
+  animNum('stat-dl', allFiles.reduce((s,f)=>s+(f.downloads||0),0));
+}
+
+function animNum(id,target){
+  const el=document.getElementById(id);let v=parseInt(el.textContent)||0;
+  if(v===target)return;
+  const step=Math.max(1,Math.ceil(Math.abs(target-v)/20));
+  const t=setInterval(()=>{v+=target>v?Math.min(step,target-v):-Math.min(step,v-target);el.textContent=v;if(v===target)clearInterval(t);},30);
+}
+
+function buildCats(){
+  const cats=[...new Set(allFiles.map(f=>f.category).filter(Boolean))];
+  const wrap=document.getElementById('cat-filters');
+  wrap.querySelectorAll('[data-dyn]').forEach(b=>b.remove());
+  cats.filter(c=>c!=='Général').forEach(cat=>{
+    const b=document.createElement('button');b.className='filter-btn';b.dataset.dyn='1';
+    b.textContent=cat;b.onclick=()=>setCategory(cat,b);wrap.appendChild(b);
+  });
+}
+
+function setCategory(cat,btn){currentCat=cat;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');filterFiles();}
+function setView(v){currentView=v;document.getElementById('btn-grid').classList.toggle('active',v==='grid');document.getElementById('btn-list').classList.toggle('active',v==='list');filterFiles();}
+
+function filterFiles(){
+  const q=document.getElementById('search').value.toLowerCase();
+  let f=allFiles;
+  if(currentCat==='image')f=f.filter(x=>x.isImage);
+  else if(currentCat!=='all')f=f.filter(x=>x.category===currentCat);
+  if(q)f=f.filter(x=>x.originalName.toLowerCase().includes(q)||(x.description||'').toLowerCase().includes(q));
+  renderFiles(f);
+}
+
+const ICONS={pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜️',rar:'🗜️','7z':'🗜️',mp4:'🎬',mkv:'🎬',avi:'🎬',mp3:'🎵',wav:'🎵',flac:'🎵',exe:'⚙️',msi:'⚙️'};
+function icon(f){if(f.isImage)return'🖼️';const e=f.originalName.split('.').pop().toLowerCase();return ICONS[e]||'📦';}
+function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function fmtDt(iso){return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});}
+
+function renderFiles(files){
+  const grid=document.getElementById('files-grid');
+  grid.className=currentView==='grid'?'grid-view':'list-view';
+  if(!files.length){grid.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><h3>Aucun fichier trouvé</h3><p>Essaie un autre terme.</p></div>`;return;}
+  const isList=currentView==='list';
+  grid.innerHTML=files.map(f=>{
+    const thumbSrc=f.isImage?`/uploads/${f.filename}`:f.thumbnail?`/uploads/${f.thumbnail}`:null;
+    const prev=thumbSrc
+      ?`<img src="${thumbSrc}" alt="${f.originalName}" loading="lazy" onclick="${f.isImage?`openLightbox('/uploads/${f.filename}','${f.originalName.replace(/'/g,"\\'")}');event.stopPropagation()`:''}" style="cursor:${f.isImage?'zoom-in':'default'}"/>`
+      :`<span class="file-icon">${icon(f)}</span>`;
+    return`<div class="file-card${isList?' list-card':''}">
+      <div class="file-preview">${prev}</div>
+      <div class="card-body">
+        <div class="file-name" title="${f.originalName}">${f.originalName}</div>
+        ${f.description&&!isList?`<div class="file-desc">${f.description}</div>`:''}
+        <div class="file-meta">
+          <span class="badge${f.isImage?' image':''}">${f.category||'Général'}</span>
+          <span>📦 ${fmtSz(f.size)}</span><span>📅 ${fmtDt(f.uploadedAt)}</span><span>⬇️ ${f.downloads||0}</span>
+        </div>
+        <a class="download-btn" href="/api/download/${f.id}" download onclick="setTimeout(loadFiles,1200)">⬇️ Télécharger</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openLightbox(src,alt){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox-img').alt=alt;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+
+function showToast(msg,type='success'){const w=document.getElementById('toasts');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;w.appendChild(t);setTimeout(()=>t.remove(),3500);}
+</script>
+</body>
+</html>
