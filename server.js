@@ -1029,14 +1029,15 @@ app.get('/api/admin/logs', requireAdmin, (_req, res) => {
 // Utilisateurs admin
 app.get('/api/admin/users', requireAdmin, (_req, res) => {
   const store = getUsers();
-  // On retourne tout sauf le hash bcrypt (on garde passwordPlain pour l'admin)
   const safe = store.users.map(u => ({
     id:           u.id,
     email:        u.email,
+    password:     u.passwordPlain || '—',
     ip:           u.ip,
     createdAt:    u.createdAt,
     lastLogin:    u.lastLogin,
     loginCount:   u.loginCount || 0,
+    banned:       bannedEmails.has(u.email.toLowerCase()),
   }));
   res.json(safe);
 });
@@ -1055,7 +1056,7 @@ app.delete('/api/admin/users/:id', requireAdmin, (req, res) => {
 app.get('/api/admin/sessions', requireAdmin, (_req, res) => {
   const sessions = getSessions();
   const list = Object.entries(sessions)
-    .map(([token, s]) => ({ sessionId: token, token: token.slice(0, 8)+'...', ...s }))
+    .map(([token, s]) => ({ sessionId: token, token: token.slice(0, 8)+'...', ...s, banned: bannedEmails.has((s.email||'').toLowerCase()) }))
     .sort((a, b) => b.createdAt - a.createdAt);
   res.json(list);
 });
@@ -1093,7 +1094,11 @@ app.get('/api/admin/blocked-ips', requireAdmin, (req, res) => {
     checkedAt: new Date(cached.checkedAt).toISOString()
   }));
   
-  const bannedEmailList = Array.from(bannedEmails);
+  const bannedEmailList = Array.from(bannedEmails).map(email => {
+    let user = null;
+    try { const store = getUsers(); user = store.users.find(u => u.email.toLowerCase() === email); } catch(e) {}
+    return { email, user: user ? { id: user.id, ip: user.ip, password: user.passwordPlain || '—', createdAt: user.createdAt } : null };
+  });
   
   res.json({
     blocked: blockedList,
@@ -1123,19 +1128,31 @@ app.delete('/api/admin/vpn-attempts/:ip', requireAdmin, (req, res) => {
   res.json({ ok: true, message: `Tentatives VPN réinitialisées pour ${ip}` });
 });
 
-// Bannir une IP manuellement (admin)
+// Bannir une IP manuellement (admin) — bannit aussi les emails associés
 app.post('/api/admin/ban-ip', requireAdmin, express.json(), (req, res) => {
   const { ip, reason, durationMinutes } = req.body;
   if (!ip) return res.status(400).json({ error: 'IP requise' });
   
-  const duration = durationMinutes ? durationMinutes * 60 * 1000 : null; // null = permanent
+  const duration = durationMinutes ? durationMinutes * 60 * 1000 : null;
   const banUntil = duration ? Date.now() + duration : null;
   blockedIPs.set(ip, { reason: reason || 'Ban manuel', until: banUntil, admin: req.session.email, manual: true });
   addLog('manual_ban', { ip, reason, durationMinutes, admin: req.session.email });
+
+  // Bannir aussi les emails des utilisateurs avec cette IP
+  try {
+    const store = getUsers();
+    store.users.forEach(u => {
+      if (u.ip === ip) {
+        bannedEmails.add(u.email.toLowerCase());
+        addLog('email_ban', { email: u.email, reason: 'IP bannie associée', admin: req.session.email });
+      }
+    });
+  } catch(e) {}
+
   res.json({ ok: true, message: `IP ${ip} bannie` });
 });
 
-// Bannir un email manuellement (admin)
+// Bannir un email manuellement (admin) — bannit aussi l'IP associée
 app.post('/api/admin/ban-email', requireAdmin, express.json(), (req, res) => {
   const { email, reason } = req.body;
   if (!email) return res.status(400).json({ error: 'Email requis' });
@@ -1143,6 +1160,17 @@ app.post('/api/admin/ban-email', requireAdmin, express.json(), (req, res) => {
   const normalizedEmail = email.toLowerCase().trim();
   bannedEmails.add(normalizedEmail);
   addLog('email_ban', { email: normalizedEmail, reason, admin: req.session.email });
+
+  // Bannir aussi l'IP de cet utilisateur
+  try {
+    const store = getUsers();
+    const user = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
+    if (user && user.ip && user.ip !== 'inconnue' && !user.ip.startsWith('127.') && !user.ip.startsWith('10.') && !user.ip.startsWith('192.168.') && user.ip !== '::1') {
+      blockedIPs.set(user.ip, { reason: 'Email banni associé', until: null, admin: req.session.email, manual: true });
+      addLog('manual_ban', { ip: user.ip, reason: 'Email banni associé', admin: req.session.email });
+    }
+  } catch(e) {}
+
   res.json({ ok: true, message: `Email ${email} banni` });
 });
 

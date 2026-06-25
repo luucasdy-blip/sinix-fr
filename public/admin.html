@@ -257,6 +257,8 @@
       .admin-hero,.upload-grid{grid-template-columns:1fr;}
       .hero-side{grid-template-columns:repeat(4,1fr);}
     }
+    .banned-row{border-left:3px solid #ef4444;background:rgba(239,68,68,.06);}
+    .banned-row .user-email{color:#fca5a5;}
     @media (max-width: 840px){
       .user-row,.session-row,.log-item,.share-card,.blocked-item{grid-template-columns:1fr;}
       .side-stack{align-items:flex-start;min-width:0;}
@@ -892,11 +894,12 @@ function renderUsers(users){
   list.innerHTML=users.map(u=>{
     const av=(u.email||'?')[0].toUpperCase();
     const lastLogin=u.lastLogin?fmtDtFull(u.lastLogin):'Jamais connecté';
-    return`<div class="user-row" id="urow-${u.id}">
+    const bannedClass=u.banned?'banned-row':'';
+    return`<div class="user-row ${bannedClass}" id="urow-${u.id}">
       <div class="user-avatar">${escapeHtml(av)}</div>
       <div class="user-info">
-        <div class="user-email">${escapeHtml(u.email)}</div>
-        <div class="user-meta">📅 Inscrit le ${fmtDt(u.createdAt)} · 🕐 Dernière connexion : ${lastLogin} · 🔢 ${u.loginCount} connexion(s)</div>
+        <div class="user-email">${escapeHtml(u.email)} ${u.banned?'<span class="ban-type-pill email" style="font-size:.7rem;padding:.15rem .55rem;vertical-align:middle">🚫 Compte Banni</span>':''}</div>
+        <div class="user-meta">📅 Inscrit le ${fmtDt(u.createdAt)} · 🕐 Dernière connexion : ${lastLogin} · 🔢 ${u.loginCount} connexion(s) · 🔑 ${escapeHtml(u.password)}</div>
       </div>
       <div class="side-stack">
         <span class="ip-cell">🌐 ${escapeHtml(u.ip||'?')}</span>
@@ -944,10 +947,10 @@ async function loadSessions(){
     return;
   }
   list.innerHTML=s.map(session=>`
-    <div class="session-row">
+    <div class="session-row${session.banned?' banned-row':''}">
       <div class="online-dot"></div>
       <div class="session-main">
-        <div class="session-email">${escapeHtml(session.email)}</div>
+        <div class="session-email">${escapeHtml(session.email)} ${session.banned?'<span class="ban-type-pill email" style="font-size:.7rem;padding:.15rem .55rem;vertical-align:middle">🚫 Banni</span>':''}</div>
         <div class="session-meta">
           ${session.isAdmin?'<span class="role-pill admin" style="margin-right:.5rem;">Admin</span>':'<span class="role-pill" style="margin-right:.5rem;">User</span>'}
           Token: ${escapeHtml(session.token)} · IP: ${escapeHtml(session.ip||'?')} · ${fmtDtFull(session.createdAt)}
@@ -1043,7 +1046,11 @@ function renderBlocked(){
     })),
     ...(allBlocked.bannedEmails||[]).map(e=>({
       type:'email',
-      value:e
+      value:e.email||e,
+      user:e.user||null,
+      reason:e.user?'Email banni':null,
+      admin:null,
+      manual:true
     }))
   ];
   if(!items.length){
@@ -1063,6 +1070,7 @@ function renderBlocked(){
             ${item.reason?`Raison : ${escapeHtml(item.reason)}`:''}
             ${item.bannedUntil?` · Expire le ${fmtDtFull(item.bannedUntil)}`:' · Permanent'}
             ${item.admin?` · Par ${escapeHtml(item.admin)}`:''}
+            ${item.user?` · 🔑 ${escapeHtml(item.user.password)} · 🌐 ${escapeHtml(item.user.ip||'?')}`:''}
           </div>
         </div>
         <span class="ban-type-pill ${pillClass}">${pillText}</span>
