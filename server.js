@@ -1071,13 +1071,20 @@ app.post('/api/upload-site', requireAdmin, express.json(), (req, res) => {
 });
 
 // Suppression (admin seulement)
-app.delete('/api/files/:id', requireAdmin, (req, res) => {
+app.delete('/api/files/:id', requireAdmin, express.json(), (req, res) => {
   const data  = getData();
   const index = data.files.findIndex(f => f.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Fichier introuvable' });
 
-  const filePath = path.join(uploadsDir, data.files[index].filename);
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  const entry = data.files[index];
+  if (entry.filename) {
+    const filePath = path.join(uploadsDir, entry.filename);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
+  if (entry.thumbnail) {
+    const thumbPath = path.join(uploadsDir, entry.thumbnail);
+    if (fs.existsSync(thumbPath)) fs.unlinkSync(thumbPath);
+  }
   data.files.splice(index, 1);
   saveData(data);
   res.json({ ok: true });

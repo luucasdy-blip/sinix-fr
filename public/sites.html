@@ -58,10 +58,7 @@
       box-shadow:0 4px 12px rgba(6,182,212,.3);
     }
     .site-visit:hover{opacity:.9;transform:translateY(-1px);}
-    .site-delete{
-      background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);
-    }
-    .site-delete:hover{background:rgba(239,68,68,.2);}
+
     .sites-empty{
       text-align:center;padding:5rem 2rem;
       border:1px dashed rgba(255,255,255,.08);border-radius:22px;
@@ -70,10 +67,7 @@
     .sites-empty-icon{font-size:4rem;margin-bottom:1rem;}
     .sites-empty h3{font-size:1.3rem;margin-bottom:.5rem;}
     .sites-empty p{color:var(--muted);}
-    .admin-delete-note{
-      font-size:.75rem;color:var(--muted);text-align:center;padding:1rem;
-      border-top:1px solid var(--border);margin-top:1.5rem;
-    }
+
     @media(max-width:600px){
       .sites-shell{padding:1rem;}
       .sites-grid{grid-template-columns:1fr;}
@@ -119,16 +113,13 @@
     <div style="text-align:center;padding:3rem;color:var(--muted);grid-column:1/-1">Chargement...</div>
   </div>
 
-  <div class="admin-delete-note" id="admin-delete-note" style="display:none">
-    Tu peux supprimer les sites depuis ici (admin seulement).
-  </div>
 </div>
 
 <div class="toast-wrap" id="toasts"></div>
 
 <script src="/bg.js"></script>
 <script>
-let TOKEN='', isAdmin=false;
+let TOKEN='';
 
 (async()=>{
   const t=localStorage.getItem('fs_token');
@@ -137,11 +128,9 @@ let TOKEN='', isAdmin=false;
   const d=await r.json();
   if(d.ok){
     TOKEN=t;
-    isAdmin=d.isAdmin;
     document.getElementById('user-email').textContent=d.email;
     document.getElementById('user-pill').style.display='flex';
     if(d.isAdmin) document.getElementById('admin-link').style.display='inline';
-    if(d.isAdmin) document.getElementById('admin-delete-note').style.display='block';
   }
   loadSites();
 })();
@@ -182,21 +171,10 @@ function renderSites(sites){
         ${desc?`<div class="site-desc">${escHtml(desc)}</div>`:''}
         <div class="site-actions">
           <a class="site-btn site-visit" href="${escHtml(s.url)}" target="_blank" rel="noopener noreferrer">🌐 Visiter</a>
-          ${isAdmin?`<button class="site-btn site-delete" onclick="delSite('${s.id}')">🗑 Supprimer</button>`:''}
         </div>
       </div>
     `;
   }).join('');
-}
-
-async function delSite(id){
-  if(!confirm('Supprimer ce site ?'))return;
-  try{
-    const r=await fetch(`/api/files/${id}`,{method:'DELETE',headers:{'Content-Type':'application/json','x-token':TOKEN},body:JSON.stringify({token:TOKEN})});
-    const d=await r.json();
-    if(d.ok){showToast('Site supprimé');loadSites();}
-    else showToast(d.error||'Erreur','error');
-  }catch(e){showToast('Erreur','error');}
 }
 
 function escHtml(s){return (s||'').toString().replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
