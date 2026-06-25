@@ -727,6 +727,17 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
   }
 
+  // Verifier si le compte est banni (meme depuis une IP differente)
+  const store = getUsers();
+  const foundUser = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
+  if (foundUser && foundUser.banned) {
+    addLog('banned_email_attempt', { email: normalizedEmail, ip });
+    if (req.headers.accept && req.headers.accept.includes('text/html')) {
+      return sendBanPage(res, normalizedEmail, 'Compte banni');
+    }
+    return res.status(403).json({ error: 'Ce compte est banni.' });
+  }
+
   // Vérifier d'abord si c'est un admin (ils sont exemptés)
   const adminAccount = isAdminAccount(email, password);
   if (!adminAccount) {
@@ -747,7 +758,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   }
 
   // Utilisateur normal
-  const store = getUsers();
   const user  = store.users.find(u => u.email.toLowerCase() === (email||'').toLowerCase());
 
   if (!user) {
@@ -1083,7 +1093,7 @@ app.get('/api/admin/users', requireAdmin, (_req, res) => {
     createdAt:    u.createdAt,
     lastLogin:    u.lastLogin,
     loginCount:   u.loginCount || 0,
-    banned:       bannedEmails.has(u.email.toLowerCase()),
+    banned:       u.banned || bannedEmails.has(u.email.toLowerCase()),
   }));
   res.json(safe);
 });
@@ -1175,7 +1185,7 @@ app.delete('/api/admin/vpn-attempts/:ip', requireAdmin, (req, res) => {
   res.json({ ok: true, message: `Tentatives VPN réinitialisées pour ${ip}` });
 });
 
-// Bannir une IP manuellement (admin) — bannit aussi les emails associés
+// Bannir une IP manuellement (admin)
 app.post('/api/admin/ban-ip', requireAdmin, express.json(), (req, res) => {
   const { ip, reason, durationMinutes } = req.body;
   if (!ip) return res.status(400).json({ error: 'IP requise' });
@@ -1184,11 +1194,25 @@ app.post('/api/admin/ban-ip', requireAdmin, express.json(), (req, res) => {
   const banUntil = duration ? Date.now() + duration : null;
   blockedIPs.set(ip, { reason: reason || 'Ban manuel', until: banUntil, admin: req.session.email, manual: true });
   addLog('manual_ban', { ip, reason, durationMinutes, admin: req.session.email });
+
+  // Marquer les comptes utilisant cette IP comme bannis
+  try {
+    const store = getUsers();
+    let changed = false;
+    store.users.forEach(u => {
+      if (u.ip === ip && !u.banned) {
+        u.banned = true;
+        changed = true;
+      }
+    });
+    if (changed) saveUsers(store);
+  } catch(e) {}
+
   saveBans();
   res.json({ ok: true, message: `IP ${ip} bannie` });
 });
 
-// Bannir un email manuellement (admin) — bannit aussi l'IP associée
+// Bannir un email manuellement (admin)
 app.post('/api/admin/ban-email', requireAdmin, express.json(), (req, res) => {
   const { email, reason } = req.body;
   if (!email) return res.status(400).json({ error: 'Email requis' });
@@ -1196,6 +1220,17 @@ app.post('/api/admin/ban-email', requireAdmin, express.json(), (req, res) => {
   const normalizedEmail = email.toLowerCase().trim();
   bannedEmails.add(normalizedEmail);
   addLog('email_ban', { email: normalizedEmail, reason, admin: req.session.email });
+
+  // Marquer le compte comme banni
+  try {
+    const store = getUsers();
+    const user = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
+    if (user && !user.banned) {
+      user.banned = true;
+      saveUsers(store);
+    }
+  } catch(e) {}
+
   saveBans();
   res.json({ ok: true, message: `Email ${email} banni` });
 });
@@ -1244,7 +1279,7 @@ app.get('/api/me', requireAuth, strictAntiVpn, (req, res) => {
   // Ses logs d'activité
   const logs  = getLogs().logs.filter(l => l.email === user.email).slice(0, 50);
 
-  const banned = bannedEmails.has((user.email||'').toLowerCase());
+  const banned = user.banned || bannedEmails.has((user.email||'').toLowerCase());
 
   res.json({
     id:           user.id,
