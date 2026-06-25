@@ -158,7 +158,11 @@
 
 <canvas id="bg-canvas"></canvas>
 <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="orb orb4"></div><div class="orb orb5"></div>
 <div class="grid-overlay"></div>
+<div class="scanlines"></div>
+<div class="noise"></div>
+<div class="vignette"></div>
 
 <header>
   <div class="header-inner">
@@ -315,14 +319,8 @@
 
 <div class="toast-wrap" id="toasts"></div>
 
+<script src="/bg.js"></script>
 <script>
-const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');let pts=[];
-function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
-function P(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.r=Math.random()*1.4+.3;this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;this.a=Math.random()*.5+.1;this.h=[260,300,180][Math.floor(Math.random()*3)];}
-P.prototype.tick=function(){this.x+=this.vx;this.y+=this.vy;if(this.x<0)this.x=canvas.width;if(this.x>canvas.width)this.x=0;if(this.y<0)this.y=canvas.height;if(this.y>canvas.height)this.y=0;};
-P.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`hsla(${this.h},90%,70%,${this.a})`;ctx.fill();};
-for(let i=0;i<80;i++)pts.push(new P());
-(function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(124,92,252,${.12*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}pts.forEach(p=>{p.tick();p.draw();});requestAnimationFrame(loop);})();
 
 let TOKEN='', myData={};
 (async()=>{
