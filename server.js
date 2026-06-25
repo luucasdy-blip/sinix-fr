@@ -1155,17 +1155,6 @@ app.post('/api/admin/ban-ip', requireAdmin, express.json(), (req, res) => {
   const banUntil = duration ? Date.now() + duration : null;
   blockedIPs.set(ip, { reason: reason || 'Ban manuel', until: banUntil, admin: req.session.email, manual: true });
   addLog('manual_ban', { ip, reason, durationMinutes, admin: req.session.email });
-
-  try {
-    const store = getUsers();
-    store.users.forEach(u => {
-      if (u.ip === ip) {
-        bannedEmails.add(u.email.toLowerCase());
-        addLog('email_ban', { email: u.email, reason: 'IP bannie associée', admin: req.session.email });
-      }
-    });
-  } catch(e) {}
-
   saveBans();
   res.json({ ok: true, message: `IP ${ip} bannie` });
 });
@@ -1178,17 +1167,6 @@ app.post('/api/admin/ban-email', requireAdmin, express.json(), (req, res) => {
   const normalizedEmail = email.toLowerCase().trim();
   bannedEmails.add(normalizedEmail);
   addLog('email_ban', { email: normalizedEmail, reason, admin: req.session.email });
-
-  // Bannir aussi l'IP de cet utilisateur
-  try {
-    const store = getUsers();
-    const user = store.users.find(u => u.email.toLowerCase() === normalizedEmail);
-    if (user && user.ip && user.ip !== 'inconnue' && !user.ip.startsWith('127.') && !user.ip.startsWith('10.') && !user.ip.startsWith('192.168.') && user.ip !== '::1') {
-      blockedIPs.set(user.ip, { reason: 'Email banni associé', until: null, admin: req.session.email, manual: true });
-      addLog('manual_ban', { ip: user.ip, reason: 'Email banni associé', admin: req.session.email });
-    }
-  } catch(e) {}
-
   saveBans();
   res.json({ ok: true, message: `Email ${email} banni` });
 });
