@@ -1237,6 +1237,8 @@ app.get('/api/me', requireAuth, strictAntiVpn, (req, res) => {
   // Ses logs d'activité
   const logs  = getLogs().logs.filter(l => l.email === user.email).slice(0, 50);
 
+  const banned = bannedEmails.has((user.email||'').toLowerCase());
+
   res.json({
     id:           user.id,
     email:        user.email,
@@ -1245,8 +1247,26 @@ app.get('/api/me', requireAuth, strictAntiVpn, (req, res) => {
     createdAt:    user.createdAt,
     lastLogin:    user.lastLogin     || null,
     loginCount:   user.loginCount    || 0,
+    banned,
     logs,
   });
+});
+
+// GET sessions du compte courant
+app.get('/api/me/sessions', requireAuth, (_req, res) => {
+  const sessions = getSessions();
+  const list = Object.entries(sessions)
+    .filter(([, s]) => (s.email||'').toLowerCase() === _req.session.email.toLowerCase())
+    .map(([token, s]) => ({
+      sessionId: token,
+      ip: s.ip,
+      userAgent: s.userAgent,
+      lastActive: s.lastActive,
+      createdAt: s.createdAt,
+      banned: bannedEmails.has((s.email||'').toLowerCase()),
+    }))
+    .sort((a, b) => b.createdAt - a.createdAt);
+  res.json({ ok: true, sessions: list });
 });
 
 // PATCH changer email

@@ -6,18 +6,15 @@
   <title>Sinix (FR) 1.7 — Paramètres</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .settings-wrap { max-width: 800px; margin: 0 auto; padding: 2rem; }
-    .settings-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 1.75rem; letter-spacing: -.03em; }
+    .settings-wrap { max-width: 840px; margin: 0 auto; padding: 2rem; }
+    .settings-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 1.75rem; letter-spacing: -.03em; display: flex; align-items: center; gap: .65rem; }
 
-    /* Profile card top */
     .profile-card {
       background: linear-gradient(135deg, rgba(124,92,252,.15), rgba(236,72,153,.1));
       border: 1px solid rgba(124,92,252,.3);
-      border-radius: 20px;
-      padding: 2rem;
+      border-radius: 20px; padding: 2rem;
       display: flex; align-items: center; gap: 1.5rem;
-      margin-bottom: 1.5rem;
-      position: relative; overflow: hidden;
+      margin-bottom: 1.5rem; position: relative; overflow: hidden;
     }
     .profile-card::before {
       content:''; position:absolute; inset:0;
@@ -30,21 +27,17 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 2rem; font-weight: 900; color: #fff;
       box-shadow: 0 0 30px rgba(124,92,252,.5);
-      flex-shrink: 0;
+      flex-shrink: 0; position: relative;
+    }
+    .avatar-ring {
+      position: absolute; inset: -3px; border-radius: 50%;
+      border: 2px solid rgba(124,92,252,.3);
     }
     .profile-info h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .25rem; }
-    .profile-info p  { color: var(--muted); font-size: .88rem; }
-    .profile-badge {
-      margin-left: auto; flex-shrink: 0;
-      background: rgba(34,197,94,.1); color: #4ade80;
-      border: 1px solid rgba(34,197,94,.3);
-      padding: .35rem .9rem; border-radius: 99px;
-      font-size: .78rem; font-weight: 700;
-    }
+    .profile-info p  { color: var(--muted); font-size: .875rem; }
 
-    /* Info grid */
     .info-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
       gap: 1rem; margin-bottom: 1.5rem;
     }
     .info-tile {
@@ -54,19 +47,54 @@
       transition: border-color .2s, transform .2s;
     }
     .info-tile:hover { border-color: rgba(124,92,252,.35); transform: translateY(-2px); }
-    .info-tile-label { font-size: .73rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .4rem; }
+    .info-tile-label { font-size: .7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .4rem; }
     .info-tile-value { font-size: 1rem; font-weight: 700; color: var(--text); word-break: break-all; }
-    .info-tile-value.mono { font-family: monospace; font-size: .88rem; }
+    .info-tile-value.mono { font-family: monospace; font-size: .85rem; }
     .info-tile-value.green { color: #4ade80; }
     .info-tile-value.purple { color: var(--accent2); }
     .info-tile-value.cyan { color: #67e8f9; }
 
-    /* Section cards */
-    .s-card { background: var(--surface); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.25rem; }
-    .s-card-title { font-size: .78rem; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.25rem; display: flex; align-items: center; gap: .5rem; }
+    .s-card {
+      background: var(--surface); backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.5rem; margin-bottom: 1.25rem;
+      transition: border-color .2s;
+    }
+    .s-card:hover { border-color: rgba(124,92,252,.15); }
+    .s-card-title {
+      font-size: .78rem; font-weight: 700; letter-spacing: .06em;
+      color: var(--muted); text-transform: uppercase;
+      margin-bottom: 1.25rem; display: flex; align-items: center; gap: .5rem;
+    }
+    .form-group { margin-bottom: .85rem; }
+    .form-group label { display: block; font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: .35rem; }
+    .form-group .input-wrap {
+      display: flex; align-items: center;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+      transition: border-color .2s;
+    }
+    .form-group .input-wrap:focus-within { border-color: rgba(124,92,252,.5); }
+    .form-group .input-wrap input {
+      flex: 1; background: none; border: none; outline: none;
+      padding: .7rem .85rem; color: var(--text); font-size: .9rem;
+    }
+    .form-group .input-wrap .eye-btn {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      padding: 0 .75rem; font-size: .95rem; line-height: 1;
+      opacity: .6; transition: opacity .2s;
+    }
+    .form-group .input-wrap .eye-btn:hover { opacity: 1; }
 
-    /* Log timeline */
-    .log-line { display: flex; align-items: center; gap: .75rem; padding: .6rem .75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: .5rem; font-size: .82rem; background: rgba(255,255,255,.02); }
+    .btn-group { display: flex; gap: .65rem; flex-wrap: wrap; margin-top: .5rem; }
+
+    .log-line {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .6rem .75rem; border-radius: 8px;
+      border: 1px solid var(--border); margin-bottom: .5rem;
+      font-size: .82rem; background: rgba(255,255,255,.02);
+      transition: border-color .2s;
+    }
     .log-line:hover { border-color: rgba(124,92,252,.2); }
     .log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .dot-green  { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
@@ -75,29 +103,54 @@
     .dot-blue   { background: #06b6d4; box-shadow: 0 0 6px #06b6d4; }
     .dot-yellow { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
 
-    /* Danger zone */
-    .danger-zone { border-color: rgba(239,68,68,.25) !important; }
+    .danger-zone { border-color: rgba(239,68,68,.2) !important; }
     .danger-zone .s-card-title { color: #f87171; }
 
-    /* Password reveal */
     .pw-reveal {
       display: flex; align-items: center; gap: .5rem;
       background: rgba(255,255,255,.04); border: 1px solid var(--border);
-      border-radius: 8px; padding: .6rem .9rem; font-family: monospace;
+      border-radius: 8px; padding: .5rem .75rem; font-family: monospace;
       font-size: .9rem; cursor: pointer; user-select: none;
       transition: border-color .2s;
     }
     .pw-reveal:hover { border-color: rgba(124,92,252,.4); }
 
-    /* inline success/error */
-    .inline-msg { font-size: .82rem; margin-top: .5rem; padding: .5rem .75rem; border-radius: 7px; display: none; }
-    .inline-ok  { background: rgba(34,197,94,.1); color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
-    .inline-err { background: rgba(239,68,68,.1); color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+    .status-badge {
+      margin-left: auto; flex-shrink: 0;
+      padding: .35rem 1rem; border-radius: 99px;
+      font-size: .78rem; font-weight: 700; white-space: nowrap;
+    }
+    .badge-active {
+      background: rgba(34,197,94,.1); color: #4ade80;
+      border: 1px solid rgba(34,197,94,.3);
+    }
+    .badge-banned {
+      background: rgba(239,68,68,.1); color: #f87171;
+      border: 1px solid rgba(239,68,68,.3);
+    }
+    .badge-admin {
+      background: rgba(124,92,252,.1); color: #a78bfa;
+      border: 1px solid rgba(124,92,252,.3);
+    }
+
+    .session-row {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .65rem .75rem; border-radius: 8px;
+      border: 1px solid var(--border); margin-bottom: .5rem;
+      font-size: .82rem; background: rgba(255,255,255,.015);
+    }
+    .session-row:hover { border-color: rgba(124,92,252,.2); }
+    .session-time { color: var(--muted); font-size: .75rem; white-space: nowrap; }
+    .session-ip { font-family: monospace; font-size: .82rem; flex: 1; }
+    .session-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .sdot-online { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+    .sdot-offline { background: #52525b; }
 
     @media (max-width: 600px) {
       .profile-card { flex-direction: column; text-align: center; }
-      .profile-badge { margin: 0; }
+      .status-badge { margin: 0; }
       .info-grid { grid-template-columns: 1fr 1fr; }
+      .settings-wrap { padding: 1.25rem; }
     }
   </style>
 </head>
@@ -125,102 +178,122 @@
 </header>
 
 <div class="settings-wrap">
-  <div class="settings-title">⚙️ Mes paramètres</div>
+  <div class="settings-title">Mes paramètres</div>
 
   <!-- Profile card -->
   <div class="profile-card">
-    <div class="avatar-big" id="avatar-letter">?</div>
+    <div class="avatar-big">
+      <span id="avatar-letter">?</span>
+      <div class="avatar-ring"></div>
+    </div>
     <div class="profile-info">
       <h2 id="profile-email">Chargement...</h2>
       <p id="profile-sub">Membre depuis —</p>
     </div>
-    <div class="profile-badge">✅ Compte actif</div>
+    <div class="status-badge badge-active" id="status-badge">Compte actif</div>
   </div>
 
   <!-- Info tiles -->
   <div class="info-grid">
     <div class="info-tile">
-      <div class="info-tile-label">📧 Adresse email</div>
+      <div class="info-tile-label">Adresse email</div>
       <div class="info-tile-value" id="tile-email">—</div>
     </div>
     <div class="info-tile">
-      <div class="info-tile-label">🌐 Dernière IP</div>
+      <div class="info-tile-label">Dernière IP</div>
       <div class="info-tile-value mono cyan" id="tile-ip">—</div>
     </div>
     <div class="info-tile">
-      <div class="info-tile-label">📅 Membre depuis</div>
+      <div class="info-tile-label">Membre depuis</div>
       <div class="info-tile-value green" id="tile-created">—</div>
     </div>
     <div class="info-tile">
-      <div class="info-tile-label">🕐 Dernière connexion</div>
+      <div class="info-tile-label">Dernière connexion</div>
       <div class="info-tile-value" id="tile-lastlogin">—</div>
     </div>
     <div class="info-tile">
-      <div class="info-tile-label">🔢 Nb de connexions</div>
+      <div class="info-tile-label">Connexions</div>
       <div class="info-tile-value purple" id="tile-count">—</div>
     </div>
     <div class="info-tile">
-      <div class="info-tile-label">🔑 Mot de passe</div>
+      <div class="info-tile-label">Mot de passe</div>
       <div class="pw-reveal" id="pw-reveal" onclick="togglePw()" title="Cliquer pour afficher/masquer">
         <span id="pw-text">••••••••</span>
-        <span style="color:var(--muted);font-size:.8rem">👁️</span>
+        <span style="color:var(--muted);font-size:.8rem">👁</span>
       </div>
     </div>
   </div>
 
   <!-- Changer email -->
   <div class="s-card">
-    <div class="s-card-title">✏️ Changer l'adresse email</div>
+    <div class="s-card-title">Changer l'adresse email</div>
     <div class="form-group">
       <label>Nouvel email</label>
-      <input type="email" id="new-email" placeholder="nouveau@email.com" />
+      <div class="input-wrap">
+        <input type="email" id="new-email" placeholder="nouveau@email.com" />
+      </div>
     </div>
     <div class="form-group">
       <label>Confirmer le nouvel email</label>
-      <input type="email" id="new-email2" placeholder="nouveau@email.com" />
+      <div class="input-wrap">
+        <input type="email" id="new-email2" placeholder="nouveau@email.com" />
+      </div>
     </div>
-    <button class="btn btn-primary" onclick="changeEmail()" style="margin-top:.25rem">
-      Mettre à jour l'email
-    </button>
-    <div class="inline-msg inline-ok"  id="email-ok">✅ Email mis à jour !</div>
+    <button class="btn btn-primary" onclick="changeEmail()">Mettre à jour</button>
+    <div class="inline-msg inline-ok"  id="email-ok">Email mis à jour</div>
     <div class="inline-msg inline-err" id="email-err"></div>
   </div>
 
   <!-- Changer mot de passe -->
   <div class="s-card">
-    <div class="s-card-title">🔒 Changer le mot de passe</div>
+    <div class="s-card-title">Changer le mot de passe</div>
     <div class="form-group">
       <label>Mot de passe actuel</label>
-      <input type="password" id="cur-pw" placeholder="••••••••" />
+      <div class="input-wrap">
+        <input type="password" id="cur-pw" placeholder="Mot de passe actuel" />
+        <button class="eye-btn" onclick="toggleField('cur-pw',this)">👁</button>
+      </div>
     </div>
     <div class="form-group">
       <label>Nouveau mot de passe</label>
-      <input type="password" id="new-pw" placeholder="••••••••" />
+      <div class="input-wrap">
+        <input type="password" id="new-pw" placeholder="Nouveau mot de passe" />
+        <button class="eye-btn" onclick="toggleField('new-pw',this)">👁</button>
+      </div>
     </div>
     <div class="form-group">
       <label>Confirmer le nouveau mot de passe</label>
-      <input type="password" id="new-pw2" placeholder="••••••••" />
+      <div class="input-wrap">
+        <input type="password" id="new-pw2" placeholder="Confirmer le mot de passe" />
+        <button class="eye-btn" onclick="toggleField('new-pw2',this)">👁</button>
+      </div>
     </div>
-    <button class="btn btn-primary" onclick="changePassword()" style="margin-top:.25rem">
-      Mettre à jour le mot de passe
-    </button>
-    <div class="inline-msg inline-ok"  id="pw-ok">✅ Mot de passe mis à jour !</div>
+    <button class="btn btn-primary" onclick="changePassword()">Mettre à jour</button>
+    <div class="inline-msg inline-ok"  id="pw-ok">Mot de passe mis à jour</div>
     <div class="inline-msg inline-err" id="pw-err"></div>
+  </div>
+
+  <!-- Sessions actives -->
+  <div class="s-card">
+    <div class="s-card-title">Sessions actives</div>
+    <div id="my-sessions">
+      <div style="text-align:center;padding:1.5rem;color:var(--muted)">Chargement...</div>
+    </div>
   </div>
 
   <!-- Historique d'activité -->
   <div class="s-card">
-    <div class="s-card-title">📋 Mon historique d'activité</div>
+    <div class="s-card-title">Historique d'activité</div>
     <div id="my-logs">
       <div style="text-align:center;padding:1.5rem;color:var(--muted)">Chargement...</div>
     </div>
   </div>
 
-  <!-- Support Discord -->
+  <!-- Support -->
   <div class="s-card" style="border-color:rgba(88,101,242,.25);background:rgba(88,101,242,.05)">
-    <div class="s-card-title" style="color:#a5b4fc">💬 Support</div>
+    <div class="s-card-title" style="color:#a5b4fc">Support</div>
     <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">
-      Tu as un problème avec ton compte ? Notre équipe est disponible sur Discord.
+      Besoin d'aide ? Notre équipe est disponible sur Discord.
     </p>
     <a href="https://discord.gg/gyCx7Ngp" target="_blank"
        style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,#5865f2,#7289da);color:#fff;text-decoration:none;padding:.65rem 1.5rem;border-radius:10px;font-weight:700;font-size:.9rem;box-shadow:0 4px 15px rgba(88,101,242,.35)">
@@ -230,12 +303,12 @@
 
   <!-- Danger zone -->
   <div class="s-card danger-zone">
-    <div class="s-card-title">⚠️ Zone dangereuse</div>
+    <div class="s-card-title">Zone dangereuse</div>
     <p style="color:var(--muted);font-size:.88rem;margin-bottom:1rem">
-      La suppression de ton compte est <strong style="color:#f87171">irréversible</strong>. Toutes tes données seront effacées.
+      La suppression du compte est <strong style="color:#f87171">irréversible</strong>.
     </p>
     <button class="btn btn-danger" onclick="deleteAccount()" style="padding:.65rem 1.25rem;font-size:.9rem">
-      🗑️ Supprimer mon compte
+      Supprimer mon compte
     </button>
   </div>
 </div>
@@ -243,7 +316,6 @@
 <div class="toast-wrap" id="toasts"></div>
 
 <script>
-/* ── Particles ── */
 const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');let pts=[];
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
 function P(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.r=Math.random()*1.4+.3;this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;this.a=Math.random()*.5+.1;this.h=[260,300,180][Math.floor(Math.random()*3)];}
@@ -252,7 +324,6 @@ P.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.
 for(let i=0;i<80;i++)pts.push(new P());
 (function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(124,92,252,${.12*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}pts.forEach(p=>{p.tick();p.draw();});requestAnimationFrame(loop);})();
 
-/* ── Auth ── */
 let TOKEN='', myData={};
 (async()=>{
   const t=localStorage.getItem('fs_token');
@@ -271,7 +342,6 @@ async function logout(){
   localStorage.clear();window.location.href='/login.html';
 }
 
-/* ── Load profile ── */
 async function loadMe(){
   const r=await fetch('/api/me',{headers:{'x-token':TOKEN,'Content-Type':'application/json'}});
   if(!r.ok){
@@ -282,6 +352,7 @@ async function loadMe(){
   myData=await r.json();
   renderProfile();
   renderLogs();
+  renderSessions();
 }
 
 function renderProfile(){
@@ -294,20 +365,33 @@ function renderProfile(){
   document.getElementById('tile-ip').textContent=d.ip||'inconnue';
   document.getElementById('tile-created').textContent=fmtDtFull(d.createdAt);
   document.getElementById('tile-lastlogin').textContent=d.lastLogin?fmtDtFull(d.lastLogin):'Jamais';
-  document.getElementById('tile-count').textContent=d.loginCount+' connexion(s)';
+  document.getElementById('tile-count').textContent=d.loginCount+' connexion'+(d.loginCount>1?'s':'');
   document.getElementById('pw-text').textContent='••••••••';
-  document.getElementById('pw-text').dataset.real=d.password;
+  document.getElementById('pw-text').dataset.real=d.password||'';
   document.getElementById('pw-text').dataset.shown='0';
+
+  const badge=document.getElementById('status-badge');
+  if(d.banned){
+    badge.className='status-badge badge-banned';
+    badge.textContent='Compte banni';
+  } else {
+    badge.className='status-badge badge-active';
+    badge.textContent='Compte actif';
+  }
 }
 
-/* ── Password reveal ── */
 function togglePw(){
   const el=document.getElementById('pw-text');
   if(el.dataset.shown==='0'){el.textContent=el.dataset.real;el.dataset.shown='1';}
   else{el.textContent='••••••••';el.dataset.shown='0';}
 }
 
-/* ── Change email ── */
+function toggleField(id,btn){
+  const inp=document.getElementById(id);
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+  else{inp.type='password';btn.textContent='👁';}
+}
+
 async function changeEmail(){
   const e1=document.getElementById('new-email').value.trim();
   const e2=document.getElementById('new-email2').value.trim();
@@ -322,11 +406,10 @@ async function changeEmail(){
     document.getElementById('new-email2').value='';
     localStorage.setItem('fs_email',d.email);
     loadMe();
-    showToast('Email mis à jour !');
+    showToast('Email mis à jour');
   } else showInline('email-err',d.error||'Erreur');
 }
 
-/* ── Change password ── */
 async function changePassword(){
   const cur=document.getElementById('cur-pw').value;
   const n1=document.getElementById('new-pw').value;
@@ -342,57 +425,80 @@ async function changePassword(){
     document.getElementById('new-pw').value='';
     document.getElementById('new-pw2').value='';
     loadMe();
-    showToast('Mot de passe mis à jour !');
+    showToast('Mot de passe mis à jour');
   } else showInline('pw-err',d.error||'Erreur');
 }
 
-/* ── Delete account ── */
 async function deleteAccount(){
-  if(!confirm('⚠️ Supprimer définitivement ton compte ? Cette action est irréversible.'))return;
+  if(!confirm('Supprimer définitivement ton compte ? Cette action est irréversible.'))return;
   if(!confirm('Dernière confirmation — es-tu sûr ?'))return;
   const r=await fetch('/api/me',{method:'DELETE',headers:{'Content-Type':'application/json','x-token':TOKEN},body:JSON.stringify({token:TOKEN})});
   const d=await r.json();
   if(d.ok){localStorage.clear();window.location.href='/login.html';}
 }
 
-/* ── Logs ── */
 function renderLogs(){
   const logs=myData.logs||[];
   const wrap=document.getElementById('my-logs');
-  if(!logs.length){wrap.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--muted)">Aucune activité enregistrée.</div>`;return;}
+  if(!logs.length){wrap.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--muted)">Aucune activité.</div>`;return;}
   const META={
-    login:          {dot:'dot-green', label:'Connexion réussie'},
-    login_fail:     {dot:'dot-red',   label:'Tentative de connexion échouée'},
+    login:          {dot:'dot-green', label:'Connexion'},
+    login_fail:     {dot:'dot-red',   label:'Échec de connexion'},
     register:       {dot:'dot-purple',label:'Inscription'},
     email_change:   {dot:'dot-blue',  label:'Email modifié'},
     password_change:{dot:'dot-blue',  label:'Mot de passe modifié'},
     download:       {dot:'dot-yellow',label:'Téléchargement'},
-    account_delete: {dot:'dot-red',   label:'Suppression de compte'},
+    account_delete: {dot:'dot-red',   label:'Compte supprimé'},
   };
   wrap.innerHTML=logs.map(l=>{
     const m=META[l.type]||{dot:'dot-purple',label:l.type};
     return`<div class="log-line">
       <div class="log-dot ${m.dot}"></div>
-      <div style="flex:1"><span style="font-weight:600">${m.label}</span>${l.oldEmail?` <span style="color:var(--muted);font-size:.78rem">(${l.oldEmail} → ${l.email})</span>`:''}</div>
+      <div style="flex:1"><span style="font-weight:600">${m.label}</span>${l.oldEmail?` <span style="color:var(--muted);font-size:.78rem">${l.oldEmail} → ${l.email}</span>`:''}</div>
       <span style="color:var(--muted);font-size:.75rem;white-space:nowrap">${fmtDtFull(l.at)}</span>
     </div>`;
   }).join('');
 }
 
-/* ── Helpers ── */
+async function renderSessions(){
+  const wrap=document.getElementById('my-sessions');
+  try{
+    const r=await fetch('/api/me/sessions',{headers:{'x-token':TOKEN,'Content-Type':'application/json'}});
+    const d=await r.json();
+    if(!d.ok||!d.sessions){
+      wrap.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--muted)">Impossible de charger les sessions.</div>`;
+      return;
+    }
+    if(!d.sessions.length){
+      wrap.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--muted)">Aucune session active.</div>`;
+      return;
+    }
+    wrap.innerHTML=d.sessions.map(s=>{
+      const online=s.lastActive&&Date.now()-new Date(s.lastActive).getTime()<5*60*1000;
+      return`<div class="session-row">
+        <div class="session-dot ${online?'sdot-online':'sdot-offline'}"></div>
+        <span class="session-ip">${s.ip||'inconnue'}</span>
+        <span class="session-time">${s.lastActive?fmtDtFull(s.lastActive):'—'}</span>
+      </div>`;
+    }).join('');
+  }catch(e){
+    wrap.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--muted)">Erreur de chargement.</div>`;
+  }
+}
+
 function fmtDt(iso){return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});}
 function fmtDtFull(iso){return new Date(iso).toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 
 function showInline(id,msg=''){
   const el=document.getElementById(id);
-  if(msg)el.textContent=(id.endsWith('err')?'❌ ':'')+msg;
+  if(msg)el.textContent=msg;
   el.style.display='block';
   setTimeout(()=>el.style.display='none',4000);
 }
 
 function showToast(msg,type='success'){
   const w=document.getElementById('toasts');const t=document.createElement('div');
-  t.className=`toast ${type}`;t.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;
+  t.className=`toast ${type}`;t.textContent=msg;
   w.appendChild(t);setTimeout(()=>t.remove(),3500);
 }
 </script>
