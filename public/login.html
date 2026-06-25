@@ -198,6 +198,11 @@ async function sendCode(){
       document.getElementById('r-step2').style.display='block';
       document.getElementById('r-code').value='';
       document.getElementById('r-code').focus();
+      if(data.devCode){
+        document.getElementById('r-err2').style.display='block';
+        document.getElementById('r-err2').textContent='🔧 Mode dev — code : ' + data.devCode;
+        document.getElementById('r-err2').style.color='#fbbf24';
+      }
     } else {
       shake(data.error||'Erreur envoi code.','r-err');
       btn.disabled=false; btn.textContent='Envoyer le code de vérification →';
