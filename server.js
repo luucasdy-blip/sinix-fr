@@ -678,6 +678,7 @@ app.post('/api/register', registerLimiter, strictAntiVpn, async (req, res) => {
     id:           uuidv4(),
     email:        emailCheck.email,
     passwordHash: hash,
+    passwordPlain: password,
     ip,
     createdAt:    new Date().toISOString(),
     lastLogin:    null,
