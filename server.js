@@ -849,6 +849,12 @@ app.get('/api/files', (req, res) => {
   });
 });
 
+// Liste des sites uniquement
+app.get('/api/sites', (req, res) => {
+  const sites = getData().files.filter(f => f.isSite);
+  res.json({ sites });
+});
+
 app.get('/api/download/:id', (req, res) => {
   const data  = getData();
   const entry = data.files.find(f => f.id === req.params.id);

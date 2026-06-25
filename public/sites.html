@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinix (FR) 2.0 — Sites Web</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .sites-shell{max-width:1280px;margin:0 auto;padding:2rem;position:relative;z-index:1}
+    .sites-hero{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+      border:1px solid var(--border);border-radius:24px;
+      backdrop-filter:blur(18px);box-shadow:0 20px 60px rgba(0,0,0,.26);
+      padding:1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden;
+    }
+    .sites-hero::after{
+      content:'';position:absolute;right:-60px;bottom:-80px;width:240px;height:240px;border-radius:50%;
+      background:radial-gradient(circle,rgba(6,182,212,.24),transparent 70%);
+      pointer-events:none;
+    }
+    .sites-hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;letter-spacing:-.05em;line-height:1.02;margin-bottom:.5rem;}
+    .sites-hero p{max-width:620px;color:var(--muted);font-size:.95rem;margin-bottom:0;}
+    .sites-grid{display:grid;gap:1.25rem;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));}
+    .site-card{
+      background:var(--surface);backdrop-filter:blur(16px);
+      border:1px solid var(--border);border-radius:20px;
+      overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s;
+      position:relative;
+    }
+    .site-card:hover{transform:translateY(-5px);border-color:rgba(6,182,212,.5);box-shadow:0 12px 40px rgba(6,182,212,.15);}
+    .site-card-top{
+      padding:1.25rem 1.25rem .75rem;
+      display:flex;align-items:center;gap:1rem;
+    }
+    .site-icon{
+      width:48px;height:48px;border-radius:12px;
+      background:linear-gradient(135deg,rgba(6,182,212,.2),rgba(124,92,252,.2));
+      border:1px solid rgba(6,182,212,.3);
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.5rem;flex-shrink:0;
+    }
+    .site-info{flex:1;min-width:0}
+    .site-name{font-weight:700;font-size:.95rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .site-url{color:var(--muted);font-size:.78rem;margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .site-desc{padding:0 1.25rem .75rem;color:var(--muted);font-size:.82rem;line-height:1.5}
+    .site-actions{
+      display:flex;gap:.5rem;padding:.75rem 1.25rem;
+      border-top:1px solid var(--border);
+      background:rgba(0,0,0,.15);
+    }
+    .site-btn{
+      flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+      padding:.6rem;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;
+      text-decoration:none;border:none;transition:all .2s;font-family:inherit;
+    }
+    .site-visit{
+      background:linear-gradient(135deg,#06b6d4,#7c5cfc);color:#fff;
+      box-shadow:0 4px 12px rgba(6,182,212,.3);
+    }
+    .site-visit:hover{opacity:.9;transform:translateY(-1px);}
+    .site-delete{
+      background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);
+    }
+    .site-delete:hover{background:rgba(239,68,68,.2);}
+    .sites-empty{
+      text-align:center;padding:5rem 2rem;
+      border:1px dashed rgba(255,255,255,.08);border-radius:22px;
+      background:rgba(255,255,255,.02);
+    }
+    .sites-empty-icon{font-size:4rem;margin-bottom:1rem;}
+    .sites-empty h3{font-size:1.3rem;margin-bottom:.5rem;}
+    .sites-empty p{color:var(--muted);}
+    .admin-delete-note{
+      font-size:.75rem;color:var(--muted);text-align:center;padding:1rem;
+      border-top:1px solid var(--border);margin-top:1.5rem;
+    }
+    @media(max-width:600px){
+      .sites-shell{padding:1rem;}
+      .sites-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="orb orb4"></div><div class="orb orb5"></div>
+<div class="grid-overlay"></div>
+<div class="scanlines"></div>
+<div class="noise"></div>
+<div class="vignette"></div>
+
+<header>
+  <div class="header-inner">
+    <a href="/index.html" class="logo">
+      <img src="/sinix-logo.png" alt="Sinix" style="width:38px;height:38px;border-radius:10px;box-shadow:0 0 20px rgba(124,92,252,.5);object-fit:cover" />
+      Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 2.0</span>
+    </a>
+    <nav>
+      <a href="/index.html">Fichiers</a>
+      <a href="/sites.html" class="active">Sites Web</a>
+      <a href="/settings.html">Paramètres</a>
+      <a href="/admin.html" id="admin-link" style="display:none">Admin</a>
+      <div class="user-pill" id="user-pill">
+        <span class="user-dot"></span>
+        <span id="user-email">—</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </nav>
+  </div>
+</header>
+
+<div class="sites-shell">
+  <div class="sites-hero">
+    <h1><span class="gradient-text">Sites Web</span></h1>
+    <p>Retrouve ici tous les sites ajoutés par l'équipe. Clique sur "Visiter" pour les ouvrir.</p>
+  </div>
+
+  <div class="sites-grid" id="sites-grid">
+    <div style="text-align:center;padding:3rem;color:var(--muted);grid-column:1/-1">Chargement...</div>
+  </div>
+
+  <div class="admin-delete-note" id="admin-delete-note" style="display:none">
+    Tu peux supprimer les sites depuis ici (admin seulement).
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="/bg.js"></script>
+<script>
+let TOKEN='', isAdmin=false;
+
+(async()=>{
+  const t=localStorage.getItem('fs_token');
+  if(!t){loadSites();return;}
+  const r=await fetch('/api/auth-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});
+  const d=await r.json();
+  if(d.ok){
+    TOKEN=t;
+    isAdmin=d.isAdmin;
+    document.getElementById('user-email').textContent=d.email;
+    document.getElementById('user-pill').style.display='flex';
+    if(d.isAdmin) document.getElementById('admin-link').style.display='inline';
+    if(d.isAdmin) document.getElementById('admin-delete-note').style.display='block';
+  }
+  loadSites();
+})();
+
+async function logout(){
+  await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
+  localStorage.clear();window.location.href='/login.html';
+}
+
+async function loadSites(){
+  try{
+    const r=await fetch('/api/sites');
+    const d=await r.json();
+    renderSites(d.sites||[]);
+  }catch(e){
+    document.getElementById('sites-grid').innerHTML=`<div class="sites-empty"><div class="sites-empty-icon">❌</div><h3>Erreur de chargement</h3></div>`;
+  }
+}
+
+function renderSites(sites){
+  const grid=document.getElementById('sites-grid');
+  if(!sites.length){
+    grid.innerHTML=`<div class="sites-empty"><div class="sites-empty-icon">🌐</div><h3>Aucun site pour l'instant</h3><p>Reviens plus tard, l'équipe ajoute régulièrement du contenu.</p></div>`;
+    return;
+  }
+  grid.innerHTML=sites.map(s=>{
+    const displayUrl=s.url?s.url.replace(/^https?:\/\//,'').replace(/\/.*$/,''):'?';
+    const desc=s.description||'';
+    return `
+      <div class="site-card">
+        <div class="site-card-top">
+          <div class="site-icon">🌐</div>
+          <div class="site-info">
+            <div class="site-name" title="${escHtml(s.originalName)}">${escHtml(s.originalName)}</div>
+            <div class="site-url">${escHtml(displayUrl)}</div>
+          </div>
+        </div>
+        ${desc?`<div class="site-desc">${escHtml(desc)}</div>`:''}
+        <div class="site-actions">
+          <a class="site-btn site-visit" href="${escHtml(s.url)}" target="_blank" rel="noopener noreferrer">🌐 Visiter</a>
+          ${isAdmin?`<button class="site-btn site-delete" onclick="delSite('${s.id}')">🗑 Supprimer</button>`:''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function delSite(id){
+  if(!confirm('Supprimer ce site ?'))return;
+  try{
+    const r=await fetch(`/api/files/${id}`,{method:'DELETE',headers:{'Content-Type':'application/json','x-token':TOKEN},body:JSON.stringify({token:TOKEN})});
+    const d=await r.json();
+    if(d.ok){showToast('Site supprimé');loadSites();}
+    else showToast(d.error||'Erreur','error');
+  }catch(e){showToast('Erreur','error');}
+}
+
+function escHtml(s){return (s||'').toString().replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+
+function showToast(msg,type='success'){
+  const w=document.getElementById('toasts');const t=document.createElement('div');
+  t.className='toast '+type;t.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;
+  w.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+</script>
+</body>
+</html>
