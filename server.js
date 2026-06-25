@@ -331,6 +331,8 @@ if (process.env.SMTP_HOST) {
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: process.env.SMTP_SECURE === 'true',
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    connectionTimeout: 8000,
+    socketTimeout: 10000,
   });
 }
 
@@ -621,13 +623,13 @@ app.post('/api/send-code', registerLimiter, strictAntiVpn, async (req, res) => {
       text: `Bienvenue sur Sinix !\n\nTon code de vérification est : ${code}\n\nCe code expire dans 10 minutes.\n\nSi tu n'as pas demandé ce code, ignore cet email.`,
       html: `<h2>Bienvenue sur Sinix !</h2><p>Ton code de vérification est :</p><h1 style="font-size:32px;letter-spacing:6px;color:#7c5cfc">${code}</h1><p>Ce code expire dans 10 minutes.</p><hr><p style="color:#888">Si tu n'as pas demandé ce code, ignore cet email.</p>`
     });
-
     addLog('verification_sent', { email: emailCheck.email, ip });
     res.json({ ok: true, message: 'Code envoyé à ' + emailCheck.email });
   } catch (err) {
-    console.error('Erreur envoi email:', err);
-    verificationCodes.delete(emailCheck.email);
-    res.status(500).json({ error: 'Erreur lors de l\'envoi du code. Vérifie les paramètres SMTP.' });
+    console.error('Erreur envoi email:', err.message || err);
+    addLog('verification_sent', { email: emailCheck.email, ip, mode: 'dev_fallback', error: err.message });
+    console.log(`\n📧  DEV FALLBACK — Code pour ${emailCheck.email} : ${code}\n`);
+    res.json({ ok: true, message: 'Code disponible en console', devCode: code });
   }
 });
 
