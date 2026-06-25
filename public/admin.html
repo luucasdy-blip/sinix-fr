@@ -125,6 +125,8 @@
     .dropzone:hover::before,.dropzone.dragover::before{opacity:1;}
     .dropzone:hover,.dropzone.dragover{border-color:rgba(124,92,252,.62);transform:translateY(-2px);}
     .dropzone > *{position:relative;z-index:1;}
+    .type-btn{transition:all .2s;}
+    .type-btn:hover{opacity:.85;}
     .dropzone-icon{font-size:3.1rem;margin-bottom:.8rem;}
     .dropzone-title{font-weight:800;font-size:1rem;margin-bottom:.3rem;}
     .dropzone-note{color:var(--muted);font-size:.82rem;}
@@ -396,37 +398,57 @@
   <section id="sec-upload" class="section active admin-panel">
     <div class="panel-head">
       <div>
-        <div class="panel-title">Uploader un fichier</div>
-        <div class="panel-subtitle">Ajoute rapidement un nouveau contenu avec sa catégorie, sa description et une vignette personnalisée.</div>
+        <div class="panel-title">Ajouter du contenu</div>
+        <div class="panel-subtitle">Ajoute un fichier ou un lien vers un site web.</div>
       </div>
     </div>
 
     <div class="upload-grid">
       <div class="stack">
-        <div class="subcard">
-          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
-            <div class="dropzone-icon">📂</div>
-            <div class="dropzone-title">Glisse ton fichier ici</div>
-            <p>ou <strong>clique pour le sélectionner</strong></p>
-            <div class="dropzone-note">Taille illimitée côté interface, tous les formats sont acceptés.</div>
-          </div>
-          <input type="file" id="file-input" style="display:none" onchange="onFileSelected(this)" />
-
-          <div class="selected-file" id="sel-file">
-            <div class="selected-file-main">
-              <div class="selected-icon">📎</div>
-              <div style="min-width:0">
-                <div class="selected-name" id="sel-name"></div>
-                <div class="selected-size" id="sel-size"></div>
-              </div>
+        <div id="upload-file-block">
+          <div class="subcard">
+            <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
+              <div class="dropzone-icon">📂</div>
+              <div class="dropzone-title">Glisse ton fichier ici</div>
+              <p>ou <strong>clique pour le sélectionner</strong></p>
+              <div class="dropzone-note">Taille illimitée, tous les formats acceptés.</div>
             </div>
-            <button class="muted-btn" type="button" onclick="resetSelectedFile()">Retirer</button>
+            <input type="file" id="file-input" style="display:none" onchange="onFileSelected(this)" />
+
+            <div class="selected-file" id="sel-file">
+              <div class="selected-file-main">
+                <div class="selected-icon">📎</div>
+                <div style="min-width:0">
+                  <div class="selected-name" id="sel-name"></div>
+                  <div class="selected-size" id="sel-size"></div>
+                </div>
+              </div>
+              <button class="muted-btn" type="button" onclick="resetSelectedFile()">Retirer</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Type toggle -->
+        <div class="subcard" style="padding:.8rem 1.25rem">
+          <div style="display:flex;gap:.5rem">
+            <button class="type-btn active" id="type-file-btn" onclick="setUploadType('file')" style="flex:1;padding:.6rem;border-radius:10px;border:1px solid var(--border);background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;font-weight:700;cursor:pointer;font-size:.85rem;transition:opacity .2s">📄 Fichier</button>
+            <button class="type-btn" id="type-site-btn" onclick="setUploadType('site')" style="flex:1;padding:.6rem;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-weight:600;cursor:pointer;font-size:.85rem;transition:all .2s">🌐 Site web</button>
+          </div>
+        </div>
+
+        <!-- Site URL block (hidden by default) -->
+        <div id="upload-site-block" class="subcard" style="display:none">
+          <div class="form-group">
+            <label>URL du site</label>
+            <div class="input-wrap">
+              <input type="url" id="site-url" placeholder="https://exemple.com" />
+            </div>
           </div>
         </div>
 
         <div class="subcard">
           <h3>Vignette personnalisée</h3>
-          <p>Ajoute une couverture visuelle pour rendre les fichiers plus propres dans la bibliothèque publique.</p>
+          <p>Ajoute une couverture visuelle pour rendre les contenus plus propres dans la bibliothèque publique.</p>
           <div class="thumb-layout">
             <div class="thumb-preview" id="thumb-preview" onclick="document.getElementById('thumb-input').click()">
               <span class="thumb-placeholder" id="thumb-placeholder">🖼️</span>
@@ -713,17 +735,66 @@ function clearThumb(){
   document.getElementById('thumb-input').value='';
 }
 
+let uploadType='file';
+function setUploadType(type){
+  uploadType=type;
+  document.getElementById('type-file-btn').style.background=type==='file'?'linear-gradient(135deg,var(--accent),var(--pink))':'var(--surface)';
+  document.getElementById('type-file-btn').style.color=type==='file'?'#fff':'var(--muted)';
+  document.getElementById('type-site-btn').style.background=type==='site'?'linear-gradient(135deg,var(--accent),var(--pink))':'var(--surface)';
+  document.getElementById('type-site-btn').style.color=type==='site'?'#fff':'var(--muted)';
+  document.getElementById('upload-file-block').style.display=type==='file'?'block':'none';
+  document.getElementById('upload-site-block').style.display=type==='site'?'block':'none';
+  document.getElementById('upload-btn').disabled=type==='file'?!selFile:!document.getElementById('site-url').value.trim();
+}
+
 async function doUpload(){
-  if(!selFile)return;
+  document.getElementById('upload-btn').disabled=true;
+  document.getElementById('progress-wrap').style.display='block';
+  hideAlerts();
+
+  if(uploadType==='site'){
+    const url=document.getElementById('site-url').value.trim();
+    if(!url){document.getElementById('upload-btn').disabled=false;document.getElementById('progress-wrap').style.display='none';showInline('up-err','Entre une URL valide.');return;}
+    try{
+      const r=await fetch('/api/upload-site',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          token:TOKEN,
+          url,
+          description:document.getElementById('f-desc').value,
+          category:document.getElementById('f-cat').value,
+        })
+      });
+      const d=await r.json();
+      document.getElementById('progress-wrap').style.display='none';
+      if(d.ok){
+        document.getElementById('up-ok').style.display='block';
+        document.getElementById('f-desc').value='';
+        document.getElementById('f-cat').value='Général';
+        document.getElementById('site-url').value='';
+        clearThumb();
+        loadFiles();
+        showToast('Site ajouté !');
+      }else{
+        document.getElementById('up-err').textContent=d.error||'Erreur';
+        document.getElementById('up-err').style.display='block';
+        document.getElementById('upload-btn').disabled=false;
+      }
+    }catch(e){
+      document.getElementById('progress-wrap').style.display='none';
+      document.getElementById('upload-btn').disabled=false;
+    }
+    return;
+  }
+
+  if(!selFile){document.getElementById('upload-btn').disabled=false;document.getElementById('progress-wrap').style.display='none';return;}
   const fd=new FormData();
   fd.append('file',selFile);
   fd.append('token',TOKEN);
   if(selThumb) fd.append('thumbnail',selThumb);
   fd.append('description',document.getElementById('f-desc').value);
   fd.append('category',document.getElementById('f-cat').value);
-  document.getElementById('upload-btn').disabled=true;
-  document.getElementById('progress-wrap').style.display='block';
-  hideAlerts();
   const xhr=new XMLHttpRequest();
   xhr.open('POST','/api/upload');
   xhr.upload.onprogress=e=>{
@@ -748,7 +819,7 @@ async function doUpload(){
         loadFiles();
         showToast('Fichier uploadé !');
       }else{
-        document.getElementById('up-err').textContent='❌ '+(d.error||'Erreur');
+        document.getElementById('up-err').textContent=d.error||'Erreur';
         document.getElementById('up-err').style.display='block';
         document.getElementById('upload-btn').disabled=false;
       }
@@ -787,19 +858,21 @@ function renderFilesAdmin(){
   list.innerHTML=filtered.map(x=>`
     <div class="admin-file-card" id="afile-${x.id}">
       <div class="file-cover">
-        ${x.isImage?`<img src="/uploads/${x.filename}" alt="${escapeHtml(x.originalName)}" />`:`<div class="file-cover-icon">${fileIcon(x)}</div>`}
+        ${x.isSite?`<div class="file-cover-icon">🌐</div>`:x.isImage?`<img src="/uploads/${x.filename}" alt="${escapeHtml(x.originalName)}" />`:`<div class="file-cover-icon">${fileIcon(x)}</div>`}
       </div>
       <div class="file-body">
         <div class="file-name" title="${escapeHtml(x.originalName)}">${escapeHtml(x.originalName)}</div>
         <div class="file-meta">
           <span class="meta-pill">🏷️ ${escapeHtml(x.category||'Général')}</span>
-          <span class="meta-pill">📦 ${fmtSz(x.size)}</span>
+          ${x.isSite?`<span class="meta-pill">🔗 Site</span>`:`<span class="meta-pill">📦 ${fmtSz(x.size)}</span>`}
           <span class="meta-pill">⬇️ ${x.downloads||0}</span>
           <span class="meta-pill">📅 ${fmtDt(x.uploadedAt)}</span>
         </div>
         ${x.description?`<div class="user-meta" style="margin-top:.85rem">${escapeHtml(x.description)}</div>`:''}
         <div class="file-actions">
-          <a class="file-link" href="/api/download/${x.id}">⬇️ Télécharger</a>
+          ${x.isSite
+            ? `<a class="file-link" href="${escapeHtml(x.url)}" target="_blank" rel="noopener noreferrer">🌐 Visiter</a>`
+            : `<a class="file-link" href="/api/download/${x.id}">⬇️ Télécharger</a>`}
           <button class="btn" onclick="createShare('${x.id}')" style="background:rgba(124,92,252,.2);color:var(--accent2);border:1px solid rgba(124,92,252,.3);padding:.62rem .88rem;border-radius:12px;">🔗 Créer lien</button>
           <button class="btn btn-danger danger-mini" onclick="delFile('${x.id}')">🗑️</button>
         </div>
@@ -1127,6 +1200,10 @@ async function unbanEmail(email){
   loadBlocked();
   showToast('Email débanni');
 }
+
+document.getElementById('site-url').addEventListener('input',function(){
+  document.getElementById('upload-btn').disabled=!this.value.trim();
+});
 
 document.getElementById('ban-type').addEventListener('change',function(){
   const durationGroup=document.getElementById('duration-group');

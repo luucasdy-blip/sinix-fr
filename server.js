@@ -843,6 +843,7 @@ app.get('/api/download/:id', (req, res) => {
   const data  = getData();
   const entry = data.files.find(f => f.id === req.params.id);
   if (!entry) return res.status(404).json({ error: 'Fichier introuvable' });
+  if (entry.isSite) return res.redirect(entry.url);
   entry.downloads++;
   saveData(data);
   addLog('download', { fileId: entry.id, fileName: entry.originalName, ip: getIP(req) });
@@ -970,6 +971,8 @@ app.get('/api/share/download/:shareId', (req, res) => {
   const file = data.files.find(f => f.id === share.fileId);
   if (!file) return res.status(404).json({ error: 'Fichier introuvable' });
 
+  if (file.isSite) return res.redirect(file.url);
+
   file.downloads++;
   saveData(data);
   share.downloads++;
@@ -1022,6 +1025,32 @@ app.post('/api/upload', uploadLimiter, uploadFields, (req, res, next) => {
   data.files.unshift(entry);
   saveData(data);
   addLog('upload', { fileName: entry.originalName, ip: getIP(req) });
+  res.json({ ok: true, file: entry });
+});
+
+// Upload d'un site (lien URL)
+app.post('/api/upload-site', requireAdmin, express.json(), (req, res) => {
+  const { url, description, category } = req.body;
+  if (!url) return res.status(400).json({ error: 'URL requise' });
+
+  const data = getData();
+  const entry = {
+    id:           uuidv4(),
+    originalName: url.replace(/^https?:\/\//, '').replace(/\/.*$/, '').slice(0, 60),
+    url:          url,
+    size:         0,
+    isImage:      false,
+    isSite:       true,
+    thumbnail:    null,
+    description:  description || '',
+    category:     category    || 'Site',
+    uploadedAt:   new Date().toISOString(),
+    downloads:    0,
+  };
+
+  data.files.unshift(entry);
+  saveData(data);
+  addLog('upload', { fileName: entry.originalName, ip: getIP(req), url: true });
   res.json({ ok: true, file: entry });
 });
 

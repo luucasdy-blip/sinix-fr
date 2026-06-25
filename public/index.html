@@ -431,7 +431,7 @@ function renderPagination(page, totalPages){
 function goToPage(p){currentPage=p;loadFiles();window.scrollTo({top:0,behavior:'smooth'});}
 
 const ICONS={pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜️',rar:'🗜️','7z':'🗜️',mp4:'🎬',mkv:'🎬',avi:'🎬',mp3:'🎵',wav:'🎵',flac:'🎵',exe:'⚙️',msi:'⚙️'};
-function icon(f){if(f.isImage)return'🖼️';const e=f.originalName.split('.').pop().toLowerCase();return ICONS[e]||'📦';}
+function icon(f){if(f.isSite)return'🌐';if(f.isImage)return'🖼️';const e=(f.originalName||'').split('.').pop().toLowerCase();return ICONS[e]||'📦';}
 function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB';}
 function fmtDt(iso){return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});}
 
@@ -458,9 +458,11 @@ function renderFiles(files){
           ${f.description?`<div class="file-desc">${f.description}</div>`:''}
           <div class="file-meta">
             <span class="badge${f.isImage?' image':''}">${f.category||'Général'}</span>
-            <span>📦 ${fmtSz(f.size)}</span><span>📅 ${fmtDt(f.uploadedAt)}</span><span>⬇️ ${f.downloads||0}</span>
+            ${f.isSite?`<span class="badge" style="background:rgba(6,182,212,.1);color:#67e8f9;border-color:rgba(6,182,212,.25)">🌐 Site</span>`:`<span>📦 ${fmtSz(f.size)}</span>`}<span>📅 ${fmtDt(f.uploadedAt)}</span>${f.isSite?'':`<span>⬇️ ${f.downloads||0}</span>`}
           </div>
-          <a class="download-btn" href="/api/download/${f.id}" download onclick="setTimeout(loadFiles,1200)">⬇️ Télécharger</a>
+          ${f.isSite
+            ? `<a class="download-btn" href="${f.url}" target="_blank" rel="noopener noreferrer">🌐 Visiter le site</a>`
+            : `<a class="download-btn" href="/api/download/${f.id}" download onclick="setTimeout(loadFiles,1200)">⬇️ Télécharger</a>`}
         </div>
       </div>
     `;

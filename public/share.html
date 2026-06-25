@@ -66,9 +66,17 @@
                     
                     const ext = (d.file.originalName || '').split('.').pop().toLowerCase();
                     const icons = { pdf: '📄', doc: '📝', docx: '📝', xls: '📊', xlsx: '📊', zip: '🗜️', rar: '🗜️', '7z': '🗜️', mp4: '🎬', mkv: '🎬', avi: '🎬', mp3: '🎵', wav: '🎵', flac: '🎵', exe: '⚙️', msi: '⚙️', jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️' };
-                    document.getElementById('file-icon').textContent = d.file.isImage ? '🖼️' : (icons[ext] || '📦');
+                    document.getElementById('file-icon').textContent = d.file.isSite ? '🌐' : (d.file.isImage ? '🖼️' : (icons[ext] || '📦'));
                     
-                    document.getElementById('download-link').href = `/api/share/download/${shareId}`;
+                    if (d.file.isSite) {
+                        document.getElementById('download-link').textContent = '🌐 Visiter le site';
+                        document.getElementById('download-link').href = d.file.url;
+                        document.getElementById('download-link').target = '_blank';
+                        document.getElementById('download-link').rel = 'noopener noreferrer';
+                    } else {
+                        document.getElementById('download-link').textContent = '⬇️ Télécharger';
+                        document.getElementById('download-link').href = `/api/share/download/${shareId}`;
+                    }
                 } else {
                     document.getElementById('file-name').textContent = 'Lien invalide ou expiré';
                     document.getElementById('download-link').style.display = 'none';
