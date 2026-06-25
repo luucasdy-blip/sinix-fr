@@ -3,5 +3,6 @@ data.json
 users.json
 sessions.json
 logs.json
+bans.json
 .env
 node_modules/

@@ -355,6 +355,7 @@ const usersFile    = path.join(__dirname, 'users.json');
 const sessionsFile = path.join(__dirname, 'sessions.json');
 const logsFile     = path.join(__dirname, 'logs.json');
 const shareLinksFile = path.join(__dirname, 'shareLinks.json');
+const bansFile       = path.join(__dirname, 'bans.json');
 
 if (!fs.existsSync(uploadsDir))   fs.mkdirSync(uploadsDir, { recursive: true });
 if (!fs.existsSync(dataFile))     fs.writeFileSync(dataFile,     JSON.stringify({ files: [] }));
@@ -362,6 +363,21 @@ if (!fs.existsSync(usersFile))    fs.writeFileSync(usersFile,    JSON.stringify(
 if (!fs.existsSync(sessionsFile)) fs.writeFileSync(sessionsFile, JSON.stringify({}));
 if (!fs.existsSync(logsFile))     fs.writeFileSync(logsFile,     JSON.stringify({ logs: [] }));
 if (!fs.existsSync(shareLinksFile)) fs.writeFileSync(shareLinksFile, JSON.stringify({ links: [] }));
+if (!fs.existsSync(bansFile)) fs.writeFileSync(bansFile, JSON.stringify({ blockedIPs: {}, bannedEmails: [] }));
+
+// Charger les bans depuis le fichier
+try {
+  const saved = JSON.parse(fs.readFileSync(bansFile, 'utf-8'));
+  if (saved.blockedIPs) Object.entries(saved.blockedIPs).forEach(([ip, ban]) => blockedIPs.set(ip, ban));
+  if (saved.bannedEmails) saved.bannedEmails.forEach(e => bannedEmails.add(e));
+} catch(e){}
+
+function saveBans() {
+  writeJ(bansFile, {
+    blockedIPs: Object.fromEntries(blockedIPs),
+    bannedEmails: Array.from(bannedEmails)
+  });
+}
 
 // ─── Helpers JSON ─────────────────────────────────────────────────────────────
 const readJ  = f => JSON.parse(fs.readFileSync(f, 'utf-8'));
@@ -1117,6 +1133,7 @@ app.delete('/api/admin/blocked-ips/:ip', requireAdmin, (req, res) => {
   }
   blockedIPs.delete(ip);
   vpnAttempts.delete(ip);
+  saveBans();
   addLog('vpn_unban', { ip, admin: req.session.email });
   res.json({ ok: true, message: `IP ${ip} débloquée` });
 });
@@ -1139,7 +1156,6 @@ app.post('/api/admin/ban-ip', requireAdmin, express.json(), (req, res) => {
   blockedIPs.set(ip, { reason: reason || 'Ban manuel', until: banUntil, admin: req.session.email, manual: true });
   addLog('manual_ban', { ip, reason, durationMinutes, admin: req.session.email });
 
-  // Bannir aussi les emails des utilisateurs avec cette IP
   try {
     const store = getUsers();
     store.users.forEach(u => {
@@ -1150,6 +1166,7 @@ app.post('/api/admin/ban-ip', requireAdmin, express.json(), (req, res) => {
     });
   } catch(e) {}
 
+  saveBans();
   res.json({ ok: true, message: `IP ${ip} bannie` });
 });
 
@@ -1172,6 +1189,7 @@ app.post('/api/admin/ban-email', requireAdmin, express.json(), (req, res) => {
     }
   } catch(e) {}
 
+  saveBans();
   res.json({ ok: true, message: `Email ${email} banni` });
 });
 
@@ -1181,6 +1199,7 @@ app.delete('/api/admin/ban-email/:email', requireAdmin, (req, res) => {
   if (!bannedEmails.has(email)) return res.status(404).json({ error: 'Email non banni' });
   
   bannedEmails.delete(email);
+  saveBans();
   addLog('email_unban', { email, admin: req.session.email });
   res.json({ ok: true, message: `Email ${email} débanni` });
 });
