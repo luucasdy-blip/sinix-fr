@@ -389,6 +389,7 @@
   <div class="section-tabs">
     <button class="stab active" data-section="upload" onclick="showSection('upload',this)">📤 Upload</button>
     <button class="stab" data-section="files" onclick="showSection('files',this)">📁 Fichiers</button>
+    <button class="stab" data-section="sites" onclick="showSection('sites',this)">🌐 Sites</button>
     <button class="stab" data-section="shares" onclick="showSection('shares',this)">🔗 Liens</button>
     <button class="stab" data-section="users" onclick="showSection('users',this)">👤 Utilisateurs</button>
     <button class="stab" data-section="sessions" onclick="showSection('sessions',this)">🟢 Sessions</button>
@@ -540,6 +541,22 @@
       <input type="text" id="file-search" placeholder="🔎 Rechercher un fichier..." oninput="renderFilesAdmin()" style="flex:1;min-width:220px" />
     </div>
     <div id="admin-file-list" class="file-grid-admin"></div>
+  </section>
+
+  <section id="sec-sites" class="section admin-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Sites web</div>
+        <div class="panel-subtitle"><span id="site-count">0</span> site(s) publié(s).</div>
+      </div>
+      <div class="panel-tools">
+        <button class="mini-btn" onclick="loadFiles()">↻ Rafraîchir</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="site-search" placeholder="🔎 Rechercher un site..." oninput="renderSitesAdmin()" style="flex:1;min-width:220px" />
+    </div>
+    <div id="admin-site-list" class="file-grid-admin"></div>
   </section>
 
   <section id="sec-shares" class="section admin-panel">
@@ -759,7 +776,7 @@ async function doUpload(){
     try{
       const r=await fetch('/api/upload-site',{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:hdr(),
         body:JSON.stringify({
           token:TOKEN,
           url,
@@ -798,6 +815,7 @@ async function doUpload(){
   fd.append('category',document.getElementById('f-cat').value);
   const xhr=new XMLHttpRequest();
   xhr.open('POST','/api/upload');
+  xhr.setRequestHeader('x-token',TOKEN);
   xhr.upload.onprogress=e=>{
     if(e.lengthComputable){
       const p=Math.round(e.loaded/e.total*100);
@@ -809,12 +827,12 @@ async function doUpload(){
     document.getElementById('progress-wrap').style.display='none';
     try{
       const d=JSON.parse(xhr.responseText);
-      if(xhr.status===200&&d.ok){
+      if(d.ok){
         document.getElementById('up-ok').style.display='block';
         document.getElementById('f-desc').value='';
         document.getElementById('f-cat').value='Général';
-        document.getElementById('progress-fill').style.width='0%';
-        document.getElementById('progress-text').textContent='Upload en cours...';
+        document.getElementById('file-input').value='';
+        selFile=null;
         resetSelectedFile();
         clearThumb();
         loadFiles();
@@ -825,8 +843,16 @@ async function doUpload(){
         document.getElementById('upload-btn').disabled=false;
       }
     }catch(e){
+      document.getElementById('up-err').textContent='Erreur de réponse du serveur';
+      document.getElementById('up-err').style.display='block';
       document.getElementById('upload-btn').disabled=false;
     }
+  };
+  xhr.onerror=()=>{
+    document.getElementById('progress-wrap').style.display='none';
+    document.getElementById('up-err').textContent='Erreur réseau';
+    document.getElementById('up-err').style.display='block';
+    document.getElementById('upload-btn').disabled=false;
   };
   xhr.send(fd);
 }
@@ -840,17 +866,21 @@ async function loadFiles(){
   const r=await fetch('/api/files');
   const d=await r.json();
   allFiles=d.files||d;
-  document.getElementById('file-count').textContent=allFiles.length;
-  document.getElementById('s-files').textContent=allFiles.length;
-  document.getElementById('hero-files').textContent=allFiles.length;
+  const fileCount=allFiles.filter(x=>!x.isSite).length;
+  const siteCount=allFiles.filter(x=>x.isSite).length;
+  document.getElementById('file-count').textContent=fileCount;
+  document.getElementById('site-count').textContent=siteCount;
+  document.getElementById('s-files').textContent=fileCount;
+  document.getElementById('hero-files').textContent=fileCount+siteCount;
   const total=allFiles.reduce((s,x)=>s+(x.downloads||0),0);
   document.getElementById('s-dl').textContent=total;
   renderFilesAdmin();
+  renderSitesAdmin();
 }
 
 function renderFilesAdmin(){
   const q=(document.getElementById('file-search')?.value||'').toLowerCase();
-  const filtered=q?allFiles.filter(x=>x.originalName.toLowerCase().includes(q)||(x.description||'').toLowerCase().includes(q)||(x.category||'').toLowerCase().includes(q)):allFiles;
+  const filtered=allFiles.filter(x=>!x.isSite).filter(x=>!q||x.originalName.toLowerCase().includes(q)||(x.description||'').toLowerCase().includes(q)||(x.category||'').toLowerCase().includes(q));
   const list=document.getElementById('admin-file-list');
   if(!filtered.length){
     list.innerHTML='<div class="empty-admin"><span class="big">📭</span>Aucun fichier trouvé.</div>';
@@ -881,6 +911,37 @@ function renderFilesAdmin(){
     </div>`).join('');
 }
 
+function renderSitesAdmin(){
+  const q=(document.getElementById('site-search')?.value||'').toLowerCase();
+  const filtered=(q?allFiles:allFiles.filter(x=>x.isSite)).filter(x=>x.isSite);
+  const list=document.getElementById('admin-site-list');
+  document.getElementById('site-count').textContent=filtered.length;
+  if(!filtered.length){
+    list.innerHTML='<div class="empty-admin"><span class="big">🌐</span>Aucun site trouvé.</div>';
+    return;
+  }
+  list.innerHTML=filtered.map(x=>`
+    <div class="admin-file-card" id="afile-${x.id}">
+      <div class="file-cover">
+        <div class="file-cover-icon">🌐</div>
+      </div>
+      <div class="file-body">
+        <div class="file-name" title="${escapeHtml(x.originalName)}">${escapeHtml(x.originalName)}</div>
+        <div class="file-meta">
+          <span class="meta-pill">🏷️ ${escapeHtml(x.category||'Général')}</span>
+          <span class="meta-pill">🔗 Site</span>
+          <span class="meta-pill">⬇️ ${x.downloads||0}</span>
+          <span class="meta-pill">📅 ${fmtDt(x.uploadedAt)}</span>
+        </div>
+        ${x.description?`<div class="user-meta" style="margin-top:.85rem">${escapeHtml(x.description)}</div>`:''}
+        <div class="file-actions">
+          <a class="file-link" href="${escapeHtml(x.url)}" target="_blank" rel="noopener noreferrer">🌐 Visiter</a>
+          <button class="btn btn-danger danger-mini" onclick="delFile('${x.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
 async function createShare(fileId){
   const r=await fetch('/api/share',{method:'POST',headers:hdr(),body:JSON.stringify({fileId})});
   const d=await r.json();
@@ -891,10 +952,11 @@ async function createShare(fileId){
 }
 
 async function delFile(id){
-  if(!confirm('Supprimer ce fichier ?'))return;
+  if(!confirm('Supprimer ?'))return;
   const r=await fetch(`/api/files/${id}`,{method:'DELETE',headers:hdr(),body:JSON.stringify({token:TOKEN})});
   const d=await r.json();
-  if(d.ok){loadFiles();showToast('Fichier supprimé','error');}
+  if(d.ok){loadFiles();showToast('Supprimé','error');}
+  else showToast(d.error||'Erreur inconnue','error');
 }
 
 async function loadShares(){
