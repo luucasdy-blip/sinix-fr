@@ -1,4 +1,5 @@
 try { require('dotenv').config(); } catch (e) {}
+try { require('dns').setDefaultResultOrder('ipv4first'); } catch (e) {}
 const express    = require('express');
 const multer     = require('multer');
 const path       = require('path');
