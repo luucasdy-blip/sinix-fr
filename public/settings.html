@@ -313,6 +313,7 @@ async function changeEmail(){
   const e2=document.getElementById('new-email2').value.trim();
   if(!e1||!e2){showInline('email-err','Remplis tous les champs.');return;}
   if(e1!==e2){showInline('email-err','Les emails ne correspondent pas.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e1)){showInline('email-err','Entre une adresse e-mail valide.');return;}
   const r=await fetch('/api/me/email',{method:'PATCH',headers:{'Content-Type':'application/json','x-token':TOKEN},body:JSON.stringify({newEmail:e1})});
   const d=await r.json();
   if(d.ok){

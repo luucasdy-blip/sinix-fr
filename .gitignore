@@ -3,3 +3,5 @@ data.json
 users.json
 sessions.json
 logs.json
+.env
+node_modules/

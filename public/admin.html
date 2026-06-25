@@ -3,41 +3,277 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sinix (FR) 1.7 — Admin</title>
+  <title>Sinix (FR) 2.0 — Admin</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .section-tabs{display:flex;gap:.5rem;margin-bottom:1.75rem;flex-wrap:wrap;}
-    .stab{padding:.55rem 1.1rem;border:1px solid var(--border);border-radius:99px;background:var(--surface);color:var(--muted);cursor:pointer;font-size:.85rem;font-weight:600;transition:all .2s;font-family:inherit;}
-    .stab.active{background:linear-gradient(135deg,var(--accent),var(--pink));border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(124,92,252,.35);}
-    .section{display:none;}.section.active{display:block;}
-    .log-item{display:flex;align-items:flex-start;gap:.75rem;padding:.7rem .85rem;border-radius:9px;border:1px solid var(--border);margin-bottom:.5rem;background:rgba(255,255,255,.02);font-size:.82rem;}
-    .log-icon{font-size:1.1rem;flex-shrink:0;margin-top:.05rem;}
+    .admin-shell{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:2rem;}
+    .admin-hero{display:grid;grid-template-columns:1.5fr .95fr;gap:1.25rem;align-items:stretch;margin-bottom:1.5rem;}
+    .hero-panel,.hero-side,.admin-panel{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+      backdrop-filter:blur(16px);
+      border:1px solid var(--border);
+      border-radius:22px;
+      box-shadow:0 20px 70px rgba(0,0,0,.28);
+    }
+    .hero-panel{padding:1.6rem 1.6rem 1.4rem;position:relative;overflow:hidden;}
+    .hero-panel::before{
+      content:'';
+      position:absolute;inset:auto -10% -45% auto;
+      width:320px;height:320px;border-radius:50%;
+      background:radial-gradient(circle,rgba(124,92,252,.26),transparent 70%);
+      pointer-events:none;
+    }
+    .hero-badge-admin{
+      display:inline-flex;align-items:center;gap:.5rem;
+      padding:.4rem .8rem;border-radius:999px;
+      border:1px solid rgba(124,92,252,.28);
+      background:rgba(124,92,252,.12);
+      color:var(--accent2);font-size:.78rem;font-weight:700;letter-spacing:.04em;
+      margin-bottom:1rem;
+    }
+    .hero-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+    .admin-title{font-size:clamp(1.9rem,4vw,3rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin:0;}
+    .admin-subtitle{color:var(--muted);max-width:700px;margin-top:.8rem;font-size:.98rem;}
+    .hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.4rem;}
+    .quick-btn{
+      display:inline-flex;align-items:center;gap:.55rem;
+      border-radius:12px;padding:.7rem 1rem;text-decoration:none;cursor:pointer;
+      border:1px solid var(--border);background:rgba(255,255,255,.05);
+      color:var(--text);font-size:.84rem;font-weight:700;transition:all .2s;font-family:inherit;
+    }
+    .quick-btn:hover{border-color:rgba(124,92,252,.36);transform:translateY(-1px);background:rgba(124,92,252,.08);}
+    .quick-btn.primary{
+      background:linear-gradient(135deg,var(--accent),var(--pink));
+      border-color:transparent;color:#fff;box-shadow:0 8px 24px rgba(124,92,252,.32);
+    }
+    .hero-side{padding:1.2rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+    .overview-mini{
+      border-radius:18px;padding:1rem;
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      min-height:108px;
+    }
+    .overview-icon{font-size:1.2rem;margin-bottom:.55rem;display:inline-flex;}
+    .overview-value{font-size:1.45rem;font-weight:800;line-height:1;}
+    .overview-label{font-size:.8rem;color:var(--muted);margin-top:.35rem;}
+    .overview-note{font-size:.74rem;color:var(--muted);margin-top:.45rem;}
+    .section-tabs{
+      display:flex;gap:.6rem;flex-wrap:wrap;
+      margin-bottom:1.2rem;padding:.8rem;
+      background:rgba(255,255,255,.04);border:1px solid var(--border);
+      border-radius:18px;backdrop-filter:blur(14px);position:sticky;top:78px;z-index:20;
+    }
+    .stab{
+      padding:.7rem 1.05rem;border:1px solid var(--border);border-radius:999px;
+      background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;
+      font-size:.85rem;font-weight:700;transition:all .2s;font-family:inherit;
+    }
+    .stab:hover{border-color:rgba(124,92,252,.36);color:var(--text);}
+    .stab.active{
+      background:linear-gradient(135deg,var(--accent),var(--pink));
+      border-color:transparent;color:#fff;box-shadow:0 8px 24px rgba(124,92,252,.32);
+    }
+    .section{display:none;}
+    .section.active{display:block;}
+    .admin-panel{padding:1.35rem;margin-bottom:1.2rem;}
+    .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem;}
+    .panel-title{font-size:1.08rem;font-weight:800;letter-spacing:-.02em;}
+    .panel-subtitle{font-size:.84rem;color:var(--muted);margin-top:.2rem;}
+    .panel-tools{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
+    .mini-btn{
+      background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);
+      padding:.48rem .85rem;font-size:.8rem;border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700;
+    }
+    .mini-btn:hover{background:rgba(34,197,94,.16);}
+    .muted-btn{
+      background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border);
+      padding:.48rem .85rem;font-size:.8rem;border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700;
+    }
+    .admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.25rem;}
+    .stat-card{
+      position:relative;overflow:hidden;
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+      border:1px solid var(--border);border-radius:18px;padding:1.1rem 1.1rem 1rem;
+      transition:border-color .2s,transform .2s,box-shadow .2s;
+    }
+    .stat-card:hover{border-color:rgba(124,92,252,.44);transform:translateY(-2px);box-shadow:0 16px 34px rgba(124,92,252,.12);}
+    .stat-card::after{
+      content:'';position:absolute;right:-24px;bottom:-28px;width:100px;height:100px;border-radius:50%;
+      background:radial-gradient(circle,rgba(124,92,252,.18),transparent 72%);
+    }
+    .stat-card-top{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem;}
+    .stat-card-icon{
+      width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+      background:rgba(124,92,252,.14);border:1px solid rgba(124,92,252,.24);font-size:1rem;
+    }
+    .stat-card-num{font-size:2rem;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;}
+    .stat-card-label{color:var(--text);font-size:.88rem;font-weight:700;}
+    .stat-card-note{color:var(--muted);font-size:.76rem;margin-top:.2rem;}
+    .upload-grid{display:grid;grid-template-columns:1.35fr .9fr;gap:1rem;}
+    .subcard{
+      background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;padding:1rem;
+    }
+    .subcard h3{font-size:.95rem;margin-bottom:.35rem;}
+    .subcard p{color:var(--muted);font-size:.84rem;}
+    .dropzone{
+      border:2px dashed rgba(124,92,252,.34);border-radius:18px;padding:3rem 1.25rem;text-align:center;cursor:pointer;
+      transition:all .25s;background:
+      radial-gradient(circle at top,rgba(124,92,252,.12),transparent 45%),
+      rgba(124,92,252,.04);position:relative;overflow:hidden;
+    }
+    .dropzone::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,92,252,.06),rgba(236,72,153,.05));opacity:0;transition:opacity .3s;}
+    .dropzone:hover::before,.dropzone.dragover::before{opacity:1;}
+    .dropzone:hover,.dropzone.dragover{border-color:rgba(124,92,252,.62);transform:translateY(-2px);}
+    .dropzone > *{position:relative;z-index:1;}
+    .dropzone-icon{font-size:3.1rem;margin-bottom:.8rem;}
+    .dropzone-title{font-weight:800;font-size:1rem;margin-bottom:.3rem;}
+    .dropzone-note{color:var(--muted);font-size:.82rem;}
+    .selected-file{
+      display:none;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+      margin-top:1rem;padding:.95rem 1rem;background:rgba(124,92,252,.08);
+      border-radius:14px;border:1px solid rgba(124,92,252,.18);
+    }
+    .selected-file-main{display:flex;align-items:center;gap:.85rem;min-width:0;}
+    .selected-icon{
+      width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+      background:rgba(124,92,252,.14);border:1px solid rgba(124,92,252,.25);font-size:1.1rem;flex-shrink:0;
+    }
+    .selected-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+    .selected-size{color:var(--muted);font-size:.8rem;margin-top:.15rem;}
+    .thumb-layout{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;margin-top:1rem;}
+    .thumb-preview{
+      width:160px;height:116px;border-radius:16px;border:2px dashed rgba(124,92,252,.3);
+      background:rgba(124,92,252,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;
+      cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s,transform .2s;position:relative;
+    }
+    .thumb-preview:hover{border-color:rgba(124,92,252,.58);transform:translateY(-1px);}
+    .thumb-preview img{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+    .thumb-placeholder{font-size:2rem;}
+    .thumb-hint{font-size:.74rem;color:var(--muted);margin-top:.35rem;}
+    .helper-list{display:grid;gap:.6rem;margin-top:.8rem;}
+    .helper-item{
+      display:flex;gap:.7rem;align-items:flex-start;padding:.75rem .8rem;border-radius:14px;
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+    }
+    .helper-item strong{display:block;font-size:.84rem;margin-bottom:.1rem;}
+    .helper-item span{display:block;font-size:.78rem;color:var(--muted);}
+    .stack{display:grid;gap:1rem;}
+    .filter-bar{display:flex;gap:.65rem;flex-wrap:wrap;margin-bottom:1rem;}
+    .filter-bar select,.filter-bar input{
+      background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;
+      padding:.72rem .9rem;color:var(--text);font-size:.84rem;outline:none;font-family:inherit;
+    }
+    .filter-bar input[type="text"]{flex:1;min-width:200px;}
+    .file-grid-admin,.user-grid,.session-grid,.log-grid,.share-grid,.blocked-grid{display:grid;gap:.9rem;}
+    .file-grid-admin{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));}
+    .admin-file-card,.user-row,.session-row,.log-item,.share-card,.blocked-item{
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;
+      transition:border-color .2s,transform .2s,box-shadow .2s;
+    }
+    .admin-file-card:hover,.user-row:hover,.session-row:hover,.log-item:hover,.share-card:hover,.blocked-item:hover{
+      border-color:rgba(124,92,252,.34);transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.18);
+    }
+    .admin-file-card{overflow:hidden;display:flex;flex-direction:column;}
+    .file-cover{
+      height:160px;background:linear-gradient(135deg,rgba(124,92,252,.14),rgba(236,72,153,.1));
+      display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(255,255,255,.08);overflow:hidden;
+    }
+    .file-cover img{width:100%;height:100%;object-fit:cover;}
+    .file-cover-icon{font-size:3rem;opacity:.9;}
+    .file-body{padding:1rem;}
+    .file-name{font-weight:800;font-size:.95rem;line-height:1.35;word-break:break-word;}
+    .file-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem;}
+    .meta-pill{
+      display:inline-flex;align-items:center;gap:.35rem;padding:.34rem .6rem;border-radius:999px;
+      background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);font-size:.74rem;color:var(--muted);
+    }
+    .file-actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem;}
+    .file-link{
+      flex:1;min-width:120px;text-align:center;text-decoration:none;font-weight:700;
+      color:var(--accent2);border:1px solid rgba(124,92,252,.26);background:rgba(124,92,252,.08);
+      padding:.7rem .85rem;border-radius:12px;font-size:.84rem;
+    }
+    .file-link:hover{background:rgba(124,92,252,.14);}
+    .user-grid,.session-grid,.log-grid,.share-grid,.blocked-grid{grid-template-columns:1fr;}
+    .user-row,.session-row,.log-item,.share-card,.blocked-item{padding:1rem;}
+    .user-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:1rem;align-items:center;}
+    .user-avatar{
+      width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--pink));
+      display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;font-weight:800;color:#fff;
+      box-shadow:0 8px 18px rgba(124,92,252,.22);
+    }
+    .user-info{min-width:0;}
+    .user-email{font-weight:800;font-size:.94rem;word-break:break-word;}
+    .user-meta{font-size:.78rem;color:var(--muted);margin-top:.25rem;line-height:1.5;}
+    .side-stack{display:flex;flex-direction:column;gap:.45rem;align-items:flex-end;min-width:160px;}
+    .ip-cell,.role-pill,.log-badge,.share-badge,.ban-type-pill{
+      display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;
+      padding:.34rem .7rem;font-size:.75rem;font-weight:700;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .ip-cell{font-family:Consolas,monospace;background:rgba(6,182,212,.1);color:#67e8f9;border-color:rgba(6,182,212,.22);}
+    .role-pill{background:rgba(124,92,252,.12);color:var(--accent2);border-color:rgba(124,92,252,.22);}
+    .role-pill.admin{background:rgba(239,68,68,.12);color:#fca5a5;border-color:rgba(239,68,68,.24);}
+    .session-row{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:1rem;align-items:center;}
+    .online-dot{width:12px;height:12px;border-radius:50%;background:var(--success);box-shadow:0 0 10px var(--success);flex-shrink:0;}
+    .session-main{min-width:0;}
+    .session-email{font-weight:800;font-size:.92rem;word-break:break-word;}
+    .session-meta{font-size:.77rem;color:var(--muted);margin-top:.2rem;line-height:1.5;word-break:break-word;}
+    .session-action{justify-self:end;}
+    .log-item{display:grid;grid-template-columns:auto 1fr auto;gap:1rem;align-items:flex-start;}
+    .log-icon{
+      width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.05);font-size:1.1rem;border:1px solid rgba(255,255,255,.06);
+    }
     .log-time{color:var(--muted);font-size:.75rem;white-space:nowrap;}
-    .log-badge{padding:.15rem .5rem;border-radius:99px;font-size:.7rem;font-weight:700;flex-shrink:0;}
-    .log-login{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);}
-    .log-fail{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);}
-    .log-register{background:rgba(124,92,252,.12);color:var(--accent2);border:1px solid rgba(124,92,252,.25);}
-    .log-ddos{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
-    .log-upload{background:rgba(6,182,212,.1);color:#67e8f9;border:1px solid rgba(6,182,212,.25);}
-    .log-download{background:rgba(245,158,11,.1);color:#fcd34d;border:1px solid rgba(245,158,11,.25);}
-    .user-row{display:flex;align-items:center;gap:1rem;padding:.85rem 1rem;border-radius:10px;border:1px solid var(--border);margin-bottom:.6rem;background:rgba(255,255,255,.02);transition:border-color .2s;}
-    .user-row:hover{border-color:rgba(124,92,252,.3);}
-    .user-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;font-weight:700;color:#fff;}
-    .user-info{flex:1;min-width:0;}
-    .user-email{font-weight:700;font-size:.9rem;}
-    .user-meta{font-size:.75rem;color:var(--muted);margin-top:.1rem;}
-    .pw-cell{font-family:monospace;background:rgba(255,255,255,.06);border-radius:6px;padding:.2rem .5rem;font-size:.8rem;cursor:pointer;user-select:all;border:1px solid var(--border);}
-    .ip-cell{font-family:monospace;font-size:.78rem;color:var(--cyan,#67e8f9);}
-    .session-row{display:flex;align-items:center;gap:1rem;padding:.7rem 1rem;border-radius:9px;border:1px solid var(--border);margin-bottom:.5rem;background:rgba(255,255,255,.02);font-size:.82rem;}
-    .online-dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success);flex-shrink:0;}
-    .stat-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.75rem;}
-    .stat-card{background:var(--surface);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;transition:border-color .2s,transform .2s;}
-    .stat-card:hover{border-color:rgba(124,92,252,.4);transform:translateY(-2px);}
-    .stat-card-num{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-    .stat-card-label{color:var(--muted);font-size:.78rem;margin-top:.1rem;}
-    .filter-bar{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;}
-    .filter-bar select,.filter-bar input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.45rem .75rem;color:var(--text);font-size:.82rem;outline:none;font-family:inherit;}
-    .filter-bar select:focus,.filter-bar input:focus{border-color:var(--accent);}
+    .log-badge{padding:.25rem .58rem;font-size:.7rem;flex-shrink:0;}
+    .log-login{background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.25);}
+    .log-fail{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.25);}
+    .log-register{background:rgba(124,92,252,.12);color:var(--accent2);border-color:rgba(124,92,252,.25);}
+    .log-ddos{background:rgba(239,68,68,.15);color:#fca5a5;border-color:rgba(239,68,68,.3);}
+    .log-upload{background:rgba(6,182,212,.1);color:#67e8f9;border-color:rgba(6,182,212,.25);}
+    .log-download{background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);}
+    .log-line{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+    .log-maintext{color:var(--text);font-weight:700;}
+    .log-sub{font-size:.74rem;color:var(--muted);margin-top:.25rem;}
+    .empty-admin{
+      text-align:center;padding:2.6rem 1.2rem;color:var(--muted);
+      border:1px dashed rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.02);
+    }
+    .empty-admin .big{font-size:2rem;display:block;margin-bottom:.55rem;}
+    .danger-mini{padding:.62rem .88rem;border-radius:12px;}
+    .share-card{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+    .share-main{display:flex;gap:1rem;align-items:center;min-width:0;flex:1;}
+    .share-link{font-family:Consolas,monospace;color:var(--accent2);background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.2);padding:.5rem .75rem;border-radius:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:200px;}
+    .share-badge{background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);}
+    .blocked-item{display:grid;grid-template-columns:auto 1fr auto auto;gap:1rem;align-items:center;}
+    .ban-type-pill.vpn{background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.25);}
+    .ban-type-pill.manual{background:rgba(239,68,68,.15);color:#fca5a5;border-color:rgba(239,68,68,.3);}
+    .ban-type-pill.email{background:rgba(236,72,153,.15);color:#f472b6;border-color:rgba(236,72,153,.3);}
+    .blocked-info{min-width:0;}
+    .blocked-title{font-weight:800;font-size:.94rem;word-break:break-word;}
+    .blocked-meta{font-size:.78rem;color:var(--muted);margin-top:.25rem;line-height:1.5;}
+    @media (max-width: 1100px){
+      .admin-hero,.upload-grid{grid-template-columns:1fr;}
+      .hero-side{grid-template-columns:repeat(4,1fr);}
+    }
+    @media (max-width: 840px){
+      .user-row,.session-row,.log-item,.share-card,.blocked-item{grid-template-columns:1fr;}
+      .side-stack{align-items:flex-start;min-width:0;}
+      .hero-side{grid-template-columns:1fr 1fr;}
+      .section-tabs{top:72px;}
+    }
+    @media (max-width: 640px){
+      .admin-shell{padding:1rem;}
+      .hero-panel,.hero-side,.admin-panel{border-radius:18px;}
+      .admin-stats,.file-grid-admin{grid-template-columns:1fr;}
+      .hero-actions,.panel-tools,.file-actions{width:100%;}
+      .quick-btn,.file-link,.share-link{width:100%;justify-content:center;}
+      .section-tabs{padding:.65rem;gap:.5rem;}
+      .stab{flex:1;min-width:calc(50% - .5rem);text-align:center;}
+      .hero-side{grid-template-columns:1fr;}
+      .thumb-preview{width:100%;}
+    }
   </style>
 </head>
 <body>
@@ -50,7 +286,7 @@
   <div class="header-inner">
     <a href="/index.html" class="logo">
       <img src="/sinix-logo.png" alt="Sinix" style="width:38px;height:38px;border-radius:10px;box-shadow:0 0 20px rgba(124,92,252,.5);object-fit:cover" />
-      Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 1.7</span>
+      Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 2.0</span>
     </a>
     <nav>
       <a href="/index.html">Fichiers</a>
@@ -64,115 +300,308 @@
   </div>
 </header>
 
-<div class="admin-wrap">
-  <div class="admin-title">🛠️ Panneau d'administration</div>
+<div class="admin-shell">
+  <section class="admin-hero">
+    <div class="hero-panel">
+      <div class="hero-badge-admin">🛡️ Espace administrateur</div>
+      <div class="hero-title-row">
+        <div>
+          <h1 class="admin-title">Panneau d’administration</h1>
+          <p class="admin-subtitle" id="admin-subtitle">Charge les indicateurs, gère les fichiers, crée des liens de partage, surveille les connexions et garde une vue claire sur l’activité du site.</p>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="quick-btn primary" onclick="activateSection('upload')">⬆️ Uploader un fichier</button>
+        <button class="quick-btn" onclick="activateSection('blocked')">🚫 Bloqués</button>
+        <button class="quick-btn" onclick="activateSection('logs')">📋 Ouvrir les logs</button>
+      </div>
+    </div>
+    <div class="hero-side">
+      <div class="overview-mini">
+        <div class="overview-icon">📦</div>
+        <div class="overview-value" id="hero-files">0</div>
+        <div class="overview-label">Fichiers publiés</div>
+        <div class="overview-note">Bibliothèque disponible</div>
+      </div>
+      <div class="overview-mini">
+        <div class="overview-icon">👥</div>
+        <div class="overview-value" id="hero-users">0</div>
+        <div class="overview-label">Utilisateurs</div>
+        <div class="overview-note">Comptes enregistrés</div>
+      </div>
+      <div class="overview-mini">
+        <div class="overview-icon">🟢</div>
+        <div class="overview-value" id="hero-sessions">0</div>
+        <div class="overview-label">Sessions actives</div>
+        <div class="overview-note">Connexions en cours</div>
+      </div>
+      <div class="overview-mini">
+        <div class="overview-icon">🔗</div>
+        <div class="overview-value" id="hero-shares">0</div>
+        <div class="overview-label">Liens actifs</div>
+        <div class="overview-note">Liens de partage</div>
+      </div>
+    </div>
+  </section>
 
-  <!-- Stats rapides -->
-  <div class="stat-cards">
-    <div class="stat-card"><div class="stat-card-num" id="s-files">0</div><div class="stat-card-label">📁 Fichiers</div></div>
-    <div class="stat-card"><div class="stat-card-num" id="s-users">0</div><div class="stat-card-label">👤 Utilisateurs</div></div>
-    <div class="stat-card"><div class="stat-card-num" id="s-sessions">0</div><div class="stat-card-label">🟢 Connectés</div></div>
-    <div class="stat-card"><div class="stat-card-num" id="s-dl">0</div><div class="stat-card-label">⬇️ Téléchargements</div></div>
-    <div class="stat-card"><div class="stat-card-num" id="s-alerts">0</div><div class="stat-card-label">🚨 Alertes DDoS</div></div>
-  </div>
+  <section class="admin-stats">
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-card-icon">📁</div><div class="stat-card-num" id="s-files">0</div></div>
+      <div class="stat-card-label">Fichiers en ligne</div>
+      <div class="stat-card-note">Contenu disponible au téléchargement</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-card-icon">👤</div><div class="stat-card-num" id="s-users">0</div></div>
+      <div class="stat-card-label">Utilisateurs</div>
+      <div class="stat-card-note">Comptes créés sur la plateforme</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-card-icon">🟢</div><div class="stat-card-num" id="s-sessions">0</div></div>
+      <div class="stat-card-label">Sessions actives</div>
+      <div class="stat-card-note">Présence en temps réel</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-card-icon">⬇️</div><div class="stat-card-num" id="s-dl">0</div></div>
+      <div class="stat-card-label">Téléchargements</div>
+      <div class="stat-card-note">Compteur global des téléchargements</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-card-icon">🔗</div><div class="stat-card-num" id="s-shares">0</div></div>
+      <div class="stat-card-label">Liens de partage</div>
+      <div class="stat-card-note">Liens publics créés</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-top"><div class="stat-card-icon">🚫</div><div class="stat-card-num" id="s-blocked">0</div></div>
+      <div class="stat-card-label">Bloqués</div>
+      <div class="stat-card-note">IPs & emails bannis</div>
+    </div>
+  </section>
 
-  <!-- Navigation sections -->
   <div class="section-tabs">
-    <button class="stab active" onclick="showSection('upload',this)">📤 Upload</button>
-    <button class="stab"        onclick="showSection('files',this)">📁 Fichiers</button>
-    <button class="stab"        onclick="showSection('users',this)">👤 Utilisateurs</button>
-    <button class="stab"        onclick="showSection('sessions',this)">🟢 Sessions</button>
-    <button class="stab"        onclick="showSection('logs',this)">📋 Logs</button>
+    <button class="stab active" data-section="upload" onclick="showSection('upload',this)">📤 Upload</button>
+    <button class="stab" data-section="files" onclick="showSection('files',this)">📁 Fichiers</button>
+    <button class="stab" data-section="shares" onclick="showSection('shares',this)">🔗 Liens</button>
+    <button class="stab" data-section="users" onclick="showSection('users',this)">👤 Utilisateurs</button>
+    <button class="stab" data-section="sessions" onclick="showSection('sessions',this)">🟢 Sessions</button>
+    <button class="stab" data-section="blocked" onclick="showSection('blocked',this)">🚫 Bloqués</button>
+    <button class="stab" data-section="logs" onclick="showSection('logs',this)">📋 Logs</button>
   </div>
 
-  <!-- ── SECTION UPLOAD ── -->
-  <div id="sec-upload" class="section active card">
-    <div class="card-title">📤 Uploader un fichier</div>
-    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()"
-         ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
-      <div class="dropzone-icon">📂</div>
-      <p>Glisse un fichier ici ou <strong>clique pour choisir</strong></p>
-      <p style="font-size:.8rem;margin-top:.4rem">♾️ Taille illimitée — tous types acceptés</p>
-    </div>
-    <input type="file" id="file-input" style="display:none" onchange="onFileSelected(this)" />
-    <div id="sel-file" style="display:none;margin-top:1rem;padding:.85rem 1rem;background:rgba(124,92,252,.07);border-radius:10px;border:1px solid rgba(124,92,252,.2)">
-      <span id="sel-name" style="font-weight:700"></span>
-      <span id="sel-size" style="color:var(--muted);font-size:.82rem;margin-left:.5rem"></span>
-    </div>
-
-    <!-- Vignette personnalisée -->
-    <div style="margin-top:1.25rem">
-      <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">🖼️ Vignette personnalisée <span style="color:var(--muted);font-weight:400;text-transform:none">(optionnel)</span></div>
-      <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
-        <div id="thumb-preview" onclick="document.getElementById('thumb-input').click()"
-          style="width:140px;height:100px;border-radius:10px;border:2px dashed rgba(124,92,252,.3);background:rgba(124,92,252,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;overflow:hidden;transition:border-color .2s;position:relative"
-          onmouseover="this.style.borderColor='rgba(124,92,252,.6)'" onmouseout="this.style.borderColor='rgba(124,92,252,.3)'">
-          <span id="thumb-placeholder" style="font-size:2rem">🖼️</span>
-          <span style="font-size:.72rem;color:var(--muted);margin-top:.3rem" id="thumb-hint">Cliquer pour choisir</span>
-          <img id="thumb-img" src="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
-        </div>
-        <div style="flex:1;min-width:180px">
-          <p style="color:var(--muted);font-size:.82rem;margin-bottom:.5rem">Ajoute une image de couverture pour ce fichier. Elle sera affichée à la place de l'icône générique.</p>
-          <button type="button" id="thumb-clear-btn" onclick="clearThumb()" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:.35rem .75rem;border-radius:7px;font-size:.78rem;cursor:pointer">✕ Retirer la vignette</button>
-        </div>
-      </div>
-      <input type="file" id="thumb-input" accept="image/*" style="display:none" onchange="onThumbSelected(this)" />
-    </div>
-    <div style="margin-top:1.25rem">
-      <div class="form-row">
-        <div class="form-group"><label>Description</label><textarea id="f-desc" placeholder="Décris ce fichier..."></textarea></div>
-        <div class="form-group"><label>Catégorie</label>
-          <select id="f-cat">
-            <option>Général</option><option>Logiciels</option><option>Images</option>
-            <option>Documents</option><option>Musique</option><option>Vidéos</option>
-            <option>Archives</option><option>Code</option>
-          </select>
-        </div>
+  <section id="sec-upload" class="section active admin-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Uploader un fichier</div>
+        <div class="panel-subtitle">Ajoute rapidement un nouveau contenu avec sa catégorie, sa description et une vignette personnalisée.</div>
       </div>
     </div>
-    <div class="progress-wrap" id="progress-wrap">
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-      <div class="progress-text" id="progress-text">Upload en cours...</div>
-    </div>
-    <button class="btn btn-primary" id="upload-btn" onclick="doUpload()" style="margin-top:1.25rem" disabled>⬆️ Uploader</button>
-    <div class="alert alert-success" id="up-ok">✅ Fichier uploadé !</div>
-    <div class="alert alert-error"   id="up-err"></div>
-  </div>
 
-  <!-- ── SECTION FILES ── -->
-  <div id="sec-files" class="section card">
-    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>📁 Fichiers en ligne — <span id="file-count">0</span></span>
-    </div>
-    <div id="admin-file-list"></div>
-  </div>
+    <div class="upload-grid">
+      <div class="stack">
+        <div class="subcard">
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFile(event)">
+            <div class="dropzone-icon">📂</div>
+            <div class="dropzone-title">Glisse ton fichier ici</div>
+            <p>ou <strong>clique pour le sélectionner</strong></p>
+            <div class="dropzone-note">Taille illimitée côté interface, tous les formats sont acceptés.</div>
+          </div>
+          <input type="file" id="file-input" style="display:none" onchange="onFileSelected(this)" />
 
-  <!-- ── SECTION USERS ── -->
-  <div id="sec-users" class="section card">
-    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>👤 Comptes utilisateurs — <span id="user-count">0</span></span>
-      <button class="btn" style="background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);padding:.4rem .8rem;font-size:.8rem;border-radius:8px" onclick="loadUsers()">↻ Rafraîchir</button>
+          <div class="selected-file" id="sel-file">
+            <div class="selected-file-main">
+              <div class="selected-icon">📎</div>
+              <div style="min-width:0">
+                <div class="selected-name" id="sel-name"></div>
+                <div class="selected-size" id="sel-size"></div>
+              </div>
+            </div>
+            <button class="muted-btn" type="button" onclick="resetSelectedFile()">Retirer</button>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <h3>Vignette personnalisée</h3>
+          <p>Ajoute une couverture visuelle pour rendre les fichiers plus propres dans la bibliothèque publique.</p>
+          <div class="thumb-layout">
+            <div class="thumb-preview" id="thumb-preview" onclick="document.getElementById('thumb-input').click()">
+              <span class="thumb-placeholder" id="thumb-placeholder">🖼️</span>
+              <span class="thumb-hint" id="thumb-hint">Cliquer pour choisir</span>
+              <img id="thumb-img" src="" alt="Vignette" />
+            </div>
+            <div style="flex:1;min-width:220px">
+              <div class="helper-list">
+                <div class="helper-item">
+                  <div>✨</div>
+                  <div><strong>Meilleur rendu</strong><span>Utilise une image horizontale pour un aperçu plus propre.</span></div>
+                </div>
+                <div class="helper-item">
+                  <div>🧩</div>
+                  <div><strong>Optionnel</strong><span>Si tu ne mets rien, l’icône du type de fichier sera affichée.</span></div>
+                </div>
+              </div>
+              <button type="button" id="thumb-clear-btn" class="mini-btn" onclick="clearThumb()" style="display:none;margin-top:.9rem;background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.25)">✕ Retirer la vignette</button>
+            </div>
+          </div>
+          <input type="file" id="thumb-input" accept="image/*" style="display:none" onchange="onThumbSelected(this)" />
+        </div>
+
+        <div class="subcard">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="f-desc" placeholder="Décris ce fichier..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Catégorie</label>
+              <select id="f-cat">
+                <option>Général</option>
+                <option>Logiciels</option>
+                <option>Images</option>
+                <option>Documents</option>
+                <option>Musique</option>
+                <option>Vidéos</option>
+                <option>Archives</option>
+                <option>Code</option>
+              </select>
+            </div>
+          </div>
+          <div class="progress-wrap" id="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="progress-text" id="progress-text">Upload en cours...</div>
+          </div>
+          <button class="btn btn-primary" id="upload-btn" onclick="doUpload()" style="margin-top:1rem" disabled>⬆️ Uploader maintenant</button>
+          <div class="alert alert-success" id="up-ok">✅ Fichier uploadé !</div>
+          <div class="alert alert-error" id="up-err"></div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="subcard">
+          <h3>Vue rapide</h3>
+          <p>Depuis cette page tu peux ajouter du contenu, créer des liens de partage, supprimer des éléments, consulter les comptes et suivre les événements du site.</p>
+          <div class="helper-list">
+            <div class="helper-item">
+              <div>📤</div>
+              <div><strong>Upload</strong><span>Ajoute des fichiers avec description, catégorie et vignette.</span></div>
+            </div>
+            <div class="helper-item">
+              <div>🔗</div>
+              <div><strong>Partage</strong><span>Génère des liens de partage publics pour tes fichiers.</span></div>
+            </div>
+            <div class="helper-item">
+              <div>📋</div>
+              <div><strong>Logs</strong><span>Surveille les connexions, échecs et événements de sécurité.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-files" class="section admin-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Fichiers en ligne</div>
+        <div class="panel-subtitle"><span id="file-count">0</span> élément(s) publiés actuellement.</div>
+      </div>
+      <div class="panel-tools">
+        <button class="mini-btn" onclick="loadFiles()">↻ Rafraîchir</button>
+      </div>
     </div>
     <div class="filter-bar">
-      <input type="text" id="user-search" placeholder="🔍 Chercher un email..." oninput="filterUsers()" style="flex:1;min-width:180px"/>
+      <input type="text" id="file-search" placeholder="🔎 Rechercher un fichier..." oninput="renderFilesAdmin()" style="flex:1;min-width:220px" />
     </div>
-    <div id="user-list"></div>
-  </div>
+    <div id="admin-file-list" class="file-grid-admin"></div>
+  </section>
 
-  <!-- ── SECTION SESSIONS ── -->
-  <div id="sec-sessions" class="section card">
-    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>🟢 Sessions actives — <span id="session-count">0</span></span>
-      <button class="btn" style="background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);padding:.4rem .8rem;font-size:.8rem;border-radius:8px" onclick="loadSessions()">↻ Rafraîchir</button>
+  <section id="sec-shares" class="section admin-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Liens de partage</div>
+        <div class="panel-subtitle"><span id="share-count">0</span> lien(s) de partage actif(s).</div>
+      </div>
+      <div class="panel-tools">
+        <button class="mini-btn" onclick="loadShares()">↻ Rafraîchir</button>
+      </div>
     </div>
-    <div id="session-list"></div>
-  </div>
+    <div id="share-list" class="share-grid"></div>
+  </section>
 
-  <!-- ── SECTION LOGS ── -->
-  <div id="sec-logs" class="section card">
-    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>📋 Journal d'activité — <span id="log-count">0</span> entrées</span>
-      <button class="btn" style="background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25);padding:.4rem .8rem;font-size:.8rem;border-radius:8px" onclick="loadLogs()">↻ Rafraîchir</button>
+  <section id="sec-users" class="section admin-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Comptes utilisateurs</div>
+        <div class="panel-subtitle"><span id="user-count">0</span> utilisateur(s) enregistrés.</div>
+      </div>
+      <div class="panel-tools">
+        <button class="mini-btn" onclick="loadUsers()">↻ Rafraîchir</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="user-search" placeholder="🔍 Chercher un email ou une IP..." oninput="filterUsers()" style="flex:1;min-width:220px" />
+    </div>
+    <div id="user-list" class="user-grid"></div>
+  </section>
+
+  <section id="sec-sessions" class="section admin-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Sessions actives</div>
+        <div class="panel-subtitle"><span id="session-count">0</span> session(s) en cours.</div>
+      </div>
+      <div class="panel-tools">
+        <button class="mini-btn" onclick="loadSessions()">↻ Rafraîchir</button>
+      </div>
+    </div>
+    <div id="session-list" class="session-grid"></div>
+  </section>
+
+  <section id="sec-blocked" class="section admin-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Bloqués</div>
+        <div class="panel-subtitle">Gère les IPs et emails bannis.</div>
+      </div>
+      <div class="panel-tools">
+        <button class="mini-btn" onclick="loadBlocked()">↻ Rafraîchir</button>
+      </div>
+    </div>
+    <div class="subcard" style="margin-bottom:1rem">
+      <h3>Bannir manuellement</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type</label>
+          <select id="ban-type">
+            <option value="ip">IP</option>
+            <option value="email">Email</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valeur</label>
+          <input type="text" id="ban-value" placeholder="192.168.1.1 ou user@example.com" />
+        </div>
+        <div class="form-group" id="duration-group">
+          <label>Durée (minutes, vide = permanent)</label>
+          <input type="number" id="ban-duration" placeholder="30" min="1" />
+        </div>
+        <div class="form-group">
+          <label>Raison</label>
+          <input type="text" id="ban-reason" placeholder="VPN, spam, etc." />
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="submitBan()">🚫 Bannir</button>
+    </div>
+    <div id="blocked-list" class="blocked-grid"></div>
+  </section>
+
+  <section id="sec-logs" class="section admin-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Journal d’activité</div>
+        <div class="panel-subtitle"><span id="log-count">0</span> entrée(s) disponibles.</div>
+      </div>
+      <div class="panel-tools">
+        <button class="mini-btn" onclick="loadLogs()">↻ Rafraîchir</button>
+      </div>
     </div>
     <div class="filter-bar">
       <select id="log-filter" onchange="renderLogs()">
@@ -185,14 +614,13 @@
         <option value="ddos">🚨 DDoS / brute force / VPN</option>
       </select>
     </div>
-    <div id="log-list"></div>
-  </div>
-
+    <div id="log-list" class="log-grid"></div>
+  </section>
 </div>
+
 <div class="toast-wrap" id="toasts"></div>
 
 <script>
-/* ── Particles ── */
 const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');let pts=[];
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
 function P(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.r=Math.random()*1.4+.3;this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;this.a=Math.random()*.5+.1;this.h=[260,300,180][Math.floor(Math.random()*3)];}
@@ -201,8 +629,13 @@ P.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.
 for(let i=0;i<100;i++)pts.push(new P());
 (function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(124,92,252,${.12*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}pts.forEach(p=>{p.tick();p.draw();});requestAnimationFrame(loop);})();
 
-/* ── Auth ── */
 let TOKEN='';
+let allFiles=[];
+let allUsers=[];
+let allLogs=[];
+let allShares=[];
+let allBlocked={blocked:[],bannedEmails:[],attempts:[],cache:[]};
+
 async function checkAuth(){
   const t=localStorage.getItem('fs_token');
   if(!t){window.location.href='/login.html';return;}
@@ -212,6 +645,7 @@ async function checkAuth(){
   TOKEN=t;
   document.getElementById('user-email').textContent=d.email;
   document.getElementById('user-pill').style.display='flex';
+  document.getElementById('admin-subtitle').textContent=`Connecté en tant qu’administrateur : ${d.email}. Gère le contenu, crée des liens de partage, surveille les connexions et garde une vue claire sur l’activité du site.`;
   loadAll();
 }
 
@@ -222,24 +656,41 @@ async function logout(){
 
 function hdr(){ return {'Content-Type':'application/json','x-token':TOKEN}; }
 
-/* ── Load all ── */
-async function loadAll(){ await Promise.all([loadFiles(),loadUsers(),loadSessions(),loadLogs()]); }
+async function loadAll(){ await Promise.all([loadFiles(),loadUsers(),loadSessions(),loadLogs(),loadShares(),loadBlocked()]); }
 
-/* ── Section switch ── */
-function showSection(name,btn){
+function activateSection(name){
+  const btn=document.querySelector(`.stab[data-section="${name}"]`);
+  if(btn) showSection(name,btn,true);
+}
+
+function showSection(name,btn,scroll=true){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
   document.getElementById('sec-'+name).classList.add('active');
   btn.classList.add('active');
+  if(scroll) document.getElementById('sec-'+name).scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-/* ── Upload ── */
 let selFile=null, selThumb=null;
 function dragOver(e){e.preventDefault();document.getElementById('dropzone').classList.add('dragover');}
 function dragLeave(){document.getElementById('dropzone').classList.remove('dragover');}
 function dropFile(e){e.preventDefault();dragLeave();if(e.dataTransfer.files[0])pickFile(e.dataTransfer.files[0]);}
 function onFileSelected(i){if(i.files[0])pickFile(i.files[0]);}
-function pickFile(f){selFile=f;document.getElementById('sel-name').textContent=f.name;document.getElementById('sel-size').textContent=fmtSz(f.size);document.getElementById('sel-file').style.display='block';document.getElementById('upload-btn').disabled=false;hideAlerts();}
+function pickFile(f){
+  selFile=f;
+  document.getElementById('sel-name').textContent=f.name;
+  document.getElementById('sel-size').textContent=fmtSz(f.size);
+  document.getElementById('sel-file').style.display='flex';
+  document.getElementById('upload-btn').disabled=false;
+  hideAlerts();
+}
+
+function resetSelectedFile(){
+  selFile=null;
+  document.getElementById('file-input').value='';
+  document.getElementById('sel-file').style.display='none';
+  document.getElementById('upload-btn').disabled=true;
+}
 
 function onThumbSelected(inp){
   if(!inp.files[0])return;
@@ -249,7 +700,7 @@ function onThumbSelected(inp){
   document.getElementById('thumb-img').style.display='block';
   document.getElementById('thumb-placeholder').style.display='none';
   document.getElementById('thumb-hint').style.display='none';
-  document.getElementById('thumb-clear-btn').style.display='inline-block';
+  document.getElementById('thumb-clear-btn').style.display='inline-flex';
 }
 
 function clearThumb(){
@@ -271,180 +722,437 @@ async function doUpload(){
   fd.append('description',document.getElementById('f-desc').value);
   fd.append('category',document.getElementById('f-cat').value);
   document.getElementById('upload-btn').disabled=true;
-  document.getElementById('progress-wrap').style.display='block';hideAlerts();
-  const xhr=new XMLHttpRequest();xhr.open('POST','/api/upload');
-  xhr.upload.onprogress=e=>{if(e.lengthComputable){const p=Math.round(e.loaded/e.total*100);document.getElementById('progress-fill').style.width=p+'%';document.getElementById('progress-text').textContent='Upload... '+p+'%';}};
-  xhr.onload=()=>{document.getElementById('progress-wrap').style.display='none';
-    try{const d=JSON.parse(xhr.responseText);
-      if(xhr.status===200&&d.ok){document.getElementById('up-ok').style.display='block';selFile=null;selThumb=null;document.getElementById('sel-file').style.display='none';document.getElementById('f-desc').value='';document.getElementById('progress-fill').style.width='0%';document.getElementById('upload-btn').disabled=true;clearThumb();loadFiles();showToast('Fichier uploadé !');}
-      else{document.getElementById('up-err').textContent='❌ '+(d.error||'Erreur');document.getElementById('up-err').style.display='block';document.getElementById('upload-btn').disabled=false;}
-    }catch(e){document.getElementById('upload-btn').disabled=false;}};
+  document.getElementById('progress-wrap').style.display='block';
+  hideAlerts();
+  const xhr=new XMLHttpRequest();
+  xhr.open('POST','/api/upload');
+  xhr.upload.onprogress=e=>{
+    if(e.lengthComputable){
+      const p=Math.round(e.loaded/e.total*100);
+      document.getElementById('progress-fill').style.width=p+'%';
+      document.getElementById('progress-text').textContent='Upload... '+p+'%';
+    }
+  };
+  xhr.onload=()=>{
+    document.getElementById('progress-wrap').style.display='none';
+    try{
+      const d=JSON.parse(xhr.responseText);
+      if(xhr.status===200&&d.ok){
+        document.getElementById('up-ok').style.display='block';
+        document.getElementById('f-desc').value='';
+        document.getElementById('f-cat').value='Général';
+        document.getElementById('progress-fill').style.width='0%';
+        document.getElementById('progress-text').textContent='Upload en cours...';
+        resetSelectedFile();
+        clearThumb();
+        loadFiles();
+        showToast('Fichier uploadé !');
+      }else{
+        document.getElementById('up-err').textContent='❌ '+(d.error||'Erreur');
+        document.getElementById('up-err').style.display='block';
+        document.getElementById('upload-btn').disabled=false;
+      }
+    }catch(e){
+      document.getElementById('upload-btn').disabled=false;
+    }
+  };
   xhr.send(fd);
 }
 
-function hideAlerts(){document.getElementById('up-ok').style.display='none';document.getElementById('up-err').style.display='none';}
+function hideAlerts(){
+  document.getElementById('up-ok').style.display='none';
+  document.getElementById('up-err').style.display='none';
+}
 
-/* ── Files ── */
 async function loadFiles(){
-  const r=await fetch('/api/files');const f=await r.json();
-  document.getElementById('file-count').textContent=f.length;
-  document.getElementById('s-files').textContent=f.length;
-  const total=f.reduce((s,x)=>s+(x.downloads||0),0);
+  const r=await fetch('/api/files');
+  const d=await r.json();
+  allFiles=d.files||d;
+  document.getElementById('file-count').textContent=allFiles.length;
+  document.getElementById('s-files').textContent=allFiles.length;
+  document.getElementById('hero-files').textContent=allFiles.length;
+  const total=allFiles.reduce((s,x)=>s+(x.downloads||0),0);
   document.getElementById('s-dl').textContent=total;
+  renderFilesAdmin();
+}
+
+function renderFilesAdmin(){
+  const q=(document.getElementById('file-search')?.value||'').toLowerCase();
+  const filtered=q?allFiles.filter(x=>x.originalName.toLowerCase().includes(q)||(x.description||'').toLowerCase().includes(q)||(x.category||'').toLowerCase().includes(q)):allFiles;
   const list=document.getElementById('admin-file-list');
-  if(!f.length){list.innerHTML=`<div class="empty" style="padding:2rem"><div class="empty-icon" style="font-size:2rem">📭</div><p>Aucun fichier.</p></div>`;return;}
-  list.innerHTML=f.map(x=>`
-    <div class="admin-file-item" id="afile-${x.id}">
-      ${x.isImage?`<img src="/uploads/${x.filename}" style="width:52px;height:40px;object-fit:cover;border-radius:7px;flex-shrink:0"/>`:`<div class="admin-file-icon">${fileIcon(x)}</div>`}
-      <div class="admin-file-info">
-        <div class="admin-file-name" title="${x.originalName}">${x.originalName}</div>
-        <div class="admin-file-meta">${x.category} · ${fmtSz(x.size)} · ⬇️ ${x.downloads} · ${fmtDt(x.uploadedAt)}</div>
+  if(!filtered.length){
+    list.innerHTML='<div class="empty-admin"><span class="big">📭</span>Aucun fichier trouvé.</div>';
+    return;
+  }
+  list.innerHTML=filtered.map(x=>`
+    <div class="admin-file-card" id="afile-${x.id}">
+      <div class="file-cover">
+        ${x.isImage?`<img src="/uploads/${x.filename}" alt="${escapeHtml(x.originalName)}" />`:`<div class="file-cover-icon">${fileIcon(x)}</div>`}
       </div>
-      <a href="/api/download/${x.id}" style="color:var(--accent2);font-size:.8rem;text-decoration:none;margin-right:.25rem">↓ Lien</a>
-      <button class="btn btn-danger" onclick="delFile('${x.id}')">🗑️</button>
+      <div class="file-body">
+        <div class="file-name" title="${escapeHtml(x.originalName)}">${escapeHtml(x.originalName)}</div>
+        <div class="file-meta">
+          <span class="meta-pill">🏷️ ${escapeHtml(x.category||'Général')}</span>
+          <span class="meta-pill">📦 ${fmtSz(x.size)}</span>
+          <span class="meta-pill">⬇️ ${x.downloads||0}</span>
+          <span class="meta-pill">📅 ${fmtDt(x.uploadedAt)}</span>
+        </div>
+        ${x.description?`<div class="user-meta" style="margin-top:.85rem">${escapeHtml(x.description)}</div>`:''}
+        <div class="file-actions">
+          <a class="file-link" href="/api/download/${x.id}">⬇️ Télécharger</a>
+          <button class="btn" onclick="createShare('${x.id}')" style="background:rgba(124,92,252,.2);color:var(--accent2);border:1px solid rgba(124,92,252,.3);padding:.62rem .88rem;border-radius:12px;">🔗 Créer lien</button>
+          <button class="btn btn-danger danger-mini" onclick="delFile('${x.id}')">🗑️</button>
+        </div>
+      </div>
     </div>`).join('');
+}
+
+async function createShare(fileId){
+  const r=await fetch('/api/share',{method:'POST',headers:hdr(),body:JSON.stringify({fileId})});
+  const d=await r.json();
+  if(d.ok){
+    showToast('Lien créé !');
+    loadShares();
+  }
 }
 
 async function delFile(id){
   if(!confirm('Supprimer ce fichier ?'))return;
   const r=await fetch(`/api/files/${id}`,{method:'DELETE',headers:hdr(),body:JSON.stringify({token:TOKEN})});
-  const d=await r.json();if(d.ok){loadFiles();showToast('Supprimé','error');}
+  const d=await r.json();
+  if(d.ok){loadFiles();showToast('Fichier supprimé','error');}
 }
-</script>
 
-<script>
-/* ── Users ── */
-let allUsers=[];
+async function loadShares(){
+  const r=await fetch('/api/admin/share-links', { headers: hdr() });
+  const d=await r.json();
+  allShares=d.links||[];
+  document.getElementById('share-count').textContent=allShares.length;
+  document.getElementById('s-shares').textContent=allShares.length;
+  document.getElementById('hero-shares').textContent=allShares.length;
+  renderShares();
+}
+
+function renderShares(){
+  const list=document.getElementById('share-list');
+  if(!allShares.length){
+    list.innerHTML='<div class="empty-admin"><span class="big">🔗</span>Aucun lien de partage. Crée-en un depuis la section "Fichiers".</div>';
+    return;
+  }
+  list.innerHTML=allShares.map(share=>{
+    const shareUrl=window.location.origin+'/share/'+share.id;
+    const file=allFiles.find(f=>f.id===share.fileId);
+    const isExpired=share.expiresAt&&new Date(share.expiresAt)<new Date();
+    return `
+      <div class="share-card" style="${isExpired?'opacity:.5;':''}">
+        <div class="share-main">
+          <div class="selected-icon">🔗</div>
+          <div style="min-width:0;flex:1;">
+            <div style="font-weight:800;margin-bottom:.25rem;">${file?escapeHtml(file.originalName):'Fichier supprimé'}</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+              <input type="text" class="share-link" readonly value="${shareUrl}" onclick="this.select();document.execCommand('copy');showToast('Lien copié !');" />
+              <span class="share-badge">⬇️ ${share.downloads||0}</span>
+              ${isExpired?'<span class="log-fail" style="padding:.25rem .58rem;font-size:.7rem;border-radius:999px;border:1px solid rgba(239,68,68,.25);">Expiré</span>':''}
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-danger danger-mini" onclick="delShare('${share.id}')">🗑️</button>
+      </div>`;
+  }).join('');
+}
+
+async function delShare(id){
+  if(!confirm('Supprimer ce lien de partage ?'))return;
+  await fetch(`/api/admin/share-links/${id}`, { method: 'DELETE', headers: hdr() });
+  loadShares();
+  showToast('Lien supprimé','error');
+}
+
 async function loadUsers(){
-  const r=await fetch('/api/admin/users',{headers:hdr()});allUsers=await r.json();
+  const r=await fetch('/api/admin/users',{headers:hdr()});
+  allUsers=await r.json();
   document.getElementById('user-count').textContent=allUsers.length;
   document.getElementById('s-users').textContent=allUsers.length;
+  document.getElementById('hero-users').textContent=allUsers.length;
   filterUsers();
 }
 
 function filterUsers(){
-  const q=document.getElementById('user-search').value.toLowerCase();
-  const f=q?allUsers.filter(u=>u.email.toLowerCase().includes(q)||u.ip.includes(q)):allUsers;
-  renderUsers(f);
+  const q=(document.getElementById('user-search').value||'').toLowerCase();
+  const filtered=q?allUsers.filter(u=>u.email.toLowerCase().includes(q)||(u.ip||'').toLowerCase().includes(q)):allUsers;
+  renderUsers(filtered);
 }
 
 function renderUsers(users){
   const list=document.getElementById('user-list');
-  if(!users.length){list.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--muted)">Aucun utilisateur.</div>`;return;}
+  if(!users.length){
+    list.innerHTML='<div class="empty-admin"><span class="big">👤</span>Aucun utilisateur trouvé.</div>';
+    return;
+  }
   list.innerHTML=users.map(u=>{
-    const av=u.email[0].toUpperCase();
+    const av=(u.email||'?')[0].toUpperCase();
     const lastLogin=u.lastLogin?fmtDtFull(u.lastLogin):'Jamais connecté';
     return`<div class="user-row" id="urow-${u.id}">
-      <div class="user-avatar">${av}</div>
+      <div class="user-avatar">${escapeHtml(av)}</div>
       <div class="user-info">
-        <div class="user-email">${u.email}</div>
-        <div class="user-meta">
-          📅 Inscrit le ${fmtDt(u.createdAt)} &nbsp;·&nbsp;
-          🕐 Dernière co : ${lastLogin} &nbsp;·&nbsp;
-          🔢 ${u.loginCount} connexion(s)
-        </div>
+        <div class="user-email">${escapeHtml(u.email)}</div>
+        <div class="user-meta">📅 Inscrit le ${fmtDt(u.createdAt)} · 🕐 Dernière connexion : ${lastLogin} · 🔢 ${u.loginCount} connexion(s)</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end;flex-shrink:0">
-        <span class="ip-cell">🌐 ${u.ip||'?'}</span>
-        <span class="pw-cell" title="Cliquer pour copier" onclick="copyText('${u.password.replace(/'/g,"\\'")}',this)">
-          🔑 ${u.password}
-        </span>
+      <div class="side-stack">
+        <span class="ip-cell">🌐 ${escapeHtml(u.ip||'?')}</span>
       </div>
-      <button class="btn btn-danger" onclick="delUser('${u.id}')" style="flex-shrink:0">🗑️</button>
+      <button class="btn" onclick="quickBanUser('${escapeHtml(u.email)}','${escapeHtml(u.ip||'')}')" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);padding:.62rem .88rem;border-radius:12px;">🚫 Bannir</button>
+      <button class="btn btn-danger danger-mini" onclick="delUser('${u.id}')">🗑️</button>
     </div>`;
   }).join('');
+}
+
+function quickBanUser(email, ip){
+  if(ip){
+    document.getElementById('ban-type').value='ip';
+    document.getElementById('ban-value').value=ip;
+  }else{
+    document.getElementById('ban-type').value='email';
+    document.getElementById('ban-value').value=email;
+  }
+  activateSection('blocked');
 }
 
 async function delUser(id){
   if(!confirm('Supprimer cet utilisateur ?'))return;
   const r=await fetch(`/api/admin/users/${id}`,{method:'DELETE',headers:hdr(),body:JSON.stringify({token:TOKEN})});
-  const d=await r.json();if(d.ok){loadUsers();showToast('Utilisateur supprimé','error');}
+  const d=await r.json();
+  if(d.ok){loadUsers();showToast('Utilisateur supprimé','error');}
 }
 
-function copyText(txt,el){navigator.clipboard.writeText(txt);const o=el.textContent;el.textContent='✅ Copié !';setTimeout(()=>el.textContent=o,1500);}
+function copyText(txt,el){
+  navigator.clipboard.writeText(txt);
+  const o=el.textContent;
+  el.textContent='✅ Copié !';
+  setTimeout(()=>el.textContent=o,1500);
+}
 
-/* ── Sessions ── */
 async function loadSessions(){
-  const r=await fetch('/api/admin/sessions',{headers:hdr()});const s=await r.json();
+  const r=await fetch('/api/admin/sessions',{headers:hdr()});
+  const s=await r.json();
   document.getElementById('session-count').textContent=s.length;
   document.getElementById('s-sessions').textContent=s.length;
+  document.getElementById('hero-sessions').textContent=s.length;
   const list=document.getElementById('session-list');
-  if(!s.length){list.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--muted)">Aucune session active.</div>`;return;}
-  list.innerHTML=s.map(x=>`
+  if(!s.length){
+    list.innerHTML='<div class="empty-admin"><span class="big">🟢</span>Aucune session active.</div>';
+    return;
+  }
+  list.innerHTML=s.map(session=>`
     <div class="session-row">
       <div class="online-dot"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:.88rem">${x.email}</div>
-        <div style="font-size:.75rem;color:var(--muted)">Token : ${x.token} &nbsp;·&nbsp; Connecté le ${fmtDtFull(new Date(x.createdAt).toISOString())}</div>
+      <div class="session-main">
+        <div class="session-email">${escapeHtml(session.email)}</div>
+        <div class="session-meta">
+          ${session.isAdmin?'<span class="role-pill admin" style="margin-right:.5rem;">Admin</span>':'<span class="role-pill" style="margin-right:.5rem;">User</span>'}
+          Token: ${escapeHtml(session.token)} · IP: ${escapeHtml(session.ip||'?')} · ${fmtDtFull(session.createdAt)}
+        </div>
       </div>
-      <span class="ip-cell">🌐 ${x.ip||'?'}</span>
-      ${x.isAdmin?'<span class="badge" style="background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.3)">ADMIN</span>':'<span class="badge">USER</span>'}
-    </div>`).join('');
+      <div class="session-action">
+        <button class="btn btn-danger danger-mini" onclick="delSession('${escapeJs(session.sessionId)}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
 }
 
-/* ── Logs ── */
-let allLogs=[];
+async function delSession(sessionId){
+  if(!confirm('Révoquer cette session ?'))return;
+  const r=await fetch(`/api/admin/sessions/${encodeURIComponent(sessionId)}`,{method:'DELETE',headers:hdr()});
+  const d=await r.json();
+  if(d.ok){loadSessions();showToast('Session révoquée','error');}
+}
+
 async function loadLogs(){
-  const r=await fetch('/api/admin/logs',{headers:hdr()});allLogs=await r.json();
+  const r=await fetch('/api/admin/logs',{headers:hdr()});
+  allLogs=await r.json();
   document.getElementById('log-count').textContent=allLogs.length;
-  const ddos=allLogs.filter(l=>l.type==='ddos'||l.type==='bruteforce').length;
-  document.getElementById('s-alerts').textContent=ddos;
   renderLogs();
 }
 
 function renderLogs(){
   const filter=document.getElementById('log-filter').value;
-  const logs=filter==='all'?allLogs:
-    filter==='ddos'?allLogs.filter(l=>l.type==='ddos'||l.type==='bruteforce'):
-    allLogs.filter(l=>l.type===filter);
+  const filtered=filter==='all'?allLogs:allLogs.filter(l=>l.type===filter);
   const list=document.getElementById('log-list');
-  if(!logs.length){list.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--muted)">Aucun log.</div>`;return;}
-  list.innerHTML=logs.slice(0,200).map(l=>{
-    const {icon:ic,label,cls}=logMeta(l.type);
-    const details=logDetails(l);
-    return`<div class="log-item">
-      <span class="log-icon">${ic}</span>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-          <span class="log-badge ${cls}">${label}</span>
-          <span style="color:var(--text);font-weight:600">${details}</span>
+  if(!filtered.length){
+    list.innerHTML='<div class="empty-admin"><span class="big">📋</span>Aucun log trouvé.</div>';
+    return;
+  }
+  list.innerHTML=filtered.map(log=>{
+    let icon='📝',badge='log-register';
+    if(log.type==='login'){icon='✅';badge='log-login';}
+    if(log.type==='login_fail'){icon='❌';badge='log-fail';}
+    if(log.type==='upload'){icon='📤';badge='log-upload';}
+    if(log.type==='download'){icon='⬇️';badge='log-download';}
+    if(log.type==='ddos'||log.type==='vpn_block'||log.type==='bruteforce'||log.type==='vpn_detected'||log.type==='vpn_ban'||log.type==='manual_ban'||log.type==='email_ban'||log.type==='vpn_unban'||log.type==='email_unban'||log.type==='banned_email_attempt'){icon='🚨';badge='log-ddos';}
+    let msg='';
+    if(log.email)msg+='<strong>'+escapeHtml(log.email)+'</strong> ';
+    if(log.type==='login')msg+='s’est connecté';
+    else if(log.type==='login_fail')msg+='échec de connexion';
+    else if(log.type==='register')msg+='s’est inscrit';
+    else if(log.type==='upload')msg+='a uploadé '+escapeHtml(log.fileName||'un fichier');
+    else if(log.type==='download')msg+='a téléchargé '+escapeHtml(log.fileName||'un fichier');
+    else if(log.type==='ddos')msg+='limite de requêtes atteinte';
+    else if(log.type==='vpn_block')msg+='VPN bloqué';
+    else if(log.type==='bruteforce')msg+='tentative brute force';
+    else if(log.type==='vpn_detected')msg+='VPN détecté : '+escapeHtml(log.reason||'');
+    else if(log.type==='vpn_ban')msg+='IP bannie (VPN)';
+    else if(log.type==='manual_ban')msg+='Ban manuel';
+    else if(log.type==='email_ban')msg+='Email banni';
+    else if(log.type==='vpn_unban')msg+='IP débannie';
+    else if(log.type==='email_unban')msg+='Email débanni';
+    else if(log.type==='banned_email_attempt')msg+='Tentative avec email banni';
+    return `
+      <div class="log-item">
+        <div class="log-icon">${icon}</div>
+        <div>
+          <div class="log-line">
+            <span class="log-badge ${badge}">${escapeHtml(log.type)}</span>
+            <span class="log-maintext">${msg}</span>
+          </div>
+          <div class="log-sub">${log.ip?escapeHtml('IP: '+log.ip):''}${log.ip&&log.at?' · ':''}${log.at?fmtDtFull(log.at):''}</div>
         </div>
-        ${l.ip?`<div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">🌐 IP : ${l.ip}</div>`:''}
+        <div class="log-time">${log.at?timeAgo(log.at):''}</div>
       </div>
-      <span class="log-time">${fmtDtFull(l.at)}</span>
-    </div>`;
+    `;
   }).join('');
 }
 
-function logMeta(type){
-  const m={
-    login:      {icon:'✅',label:'Connexion',      cls:'log-login'},
-    login_fail: {icon:'❌',label:'Échec co.',      cls:'log-fail'},
-    register:   {icon:'📝',label:'Inscription',    cls:'log-register'},
-    upload:     {icon:'📤',label:'Upload',          cls:'log-upload'},
-    download:   {icon:'⬇️',label:'Téléchargement', cls:'log-download'},
-    ddos:       {icon:'🚨',label:'DDoS',            cls:'log-ddos'},
-    bruteforce: {icon:'🔴',label:'Brute force',     cls:'log-ddos'},
-    vpn_block:  {icon:'🛡️',label:'VPN bloqué',      cls:'log-ddos'},
-  };
-  return m[type]||{icon:'📋',label:type,cls:'log-login'};
+async function loadBlocked(){
+  const r=await fetch('/api/admin/blocked-ips',{headers:hdr()});
+  allBlocked=await r.json();
+  document.getElementById('s-blocked').textContent=(allBlocked.blocked?.length||0)+(allBlocked.bannedEmails?.length||0);
+  renderBlocked();
 }
 
-function logDetails(l){
-  if(l.type==='login'||l.type==='login_fail'||l.type==='register') return l.email||'?';
-  if(l.type==='upload') return l.fileName||'?';
-  if(l.type==='download') return l.fileName||l.fileId||'?';
-  if(l.type==='ddos'||l.type==='bruteforce') return `Tentative sur ${l.path||'login'}`;
-  return '';
+function renderBlocked(){
+  const list=document.getElementById('blocked-list');
+  const items=[
+    ...(allBlocked.blocked||[]).map(b=>({
+      type:'ip',
+      value:b.ip,
+      reason:b.reason,
+      bannedUntil:b.bannedUntil,
+      remaining:b.remaining,
+      admin:b.admin,
+      manual:b.manual
+    })),
+    ...(allBlocked.bannedEmails||[]).map(e=>({
+      type:'email',
+      value:e
+    }))
+  ];
+  if(!items.length){
+    list.innerHTML='<div class="empty-admin"><span class="big">✅</span>Rien n’est bloqué pour l’instant.</div>';
+    return;
+  }
+  list.innerHTML=items.map(item=>{
+    const av=(item.value||'?')[0].toUpperCase();
+    const pillClass=item.type==='email'?'email':(item.manual?'manual':'vpn');
+    const pillText=item.type==='email'?'Email':(item.manual?'Manuel':'VPN');
+    return `
+      <div class="blocked-item">
+        <div class="user-avatar">${escapeHtml(av)}</div>
+        <div class="blocked-info">
+          <div class="blocked-title">${escapeHtml(item.value)}</div>
+          <div class="blocked-meta">
+            ${item.reason?`Raison : ${escapeHtml(item.reason)}`:''}
+            ${item.bannedUntil?` · Expire le ${fmtDtFull(item.bannedUntil)}`:' · Permanent'}
+            ${item.admin?` · Par ${escapeHtml(item.admin)}`:''}
+          </div>
+        </div>
+        <span class="ban-type-pill ${pillClass}">${pillText}</span>
+        <div class="side-stack">
+          ${item.type==='ip'?`
+            <button class="btn btn-danger danger-mini" onclick="unbanIp('${escapeHtml(item.value)}')">Débloquer</button>
+          `:`
+            <button class="btn btn-danger danger-mini" onclick="unbanEmail('${escapeHtml(item.value)}')">Débloquer</button>
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
-/* ── Helpers ── */
-const FICONS={pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜️',rar:'🗜️','7z':'🗜️',mp4:'🎬',mkv:'🎬',avi:'🎬',mp3:'🎵',wav:'🎵',exe:'⚙️',msi:'⚙️'};
-function fileIcon(f){if(f.isImage)return'🖼️';const e=f.originalName.split('.').pop().toLowerCase();return FICONS[e]||'📦';}
-function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+async function submitBan(){
+  const type=document.getElementById('ban-type').value;
+  const value=document.getElementById('ban-value').value.trim();
+  const reason=document.getElementById('ban-reason').value.trim();
+  const duration=document.getElementById('ban-duration').value;
+  if(!value){showToast('Valeur requise','error');return;}
+  try{
+    if(type==='ip'){
+      await fetch('/api/admin/ban-ip',{
+        method:'POST',
+        headers:hdr(),
+        body:JSON.stringify({ip:value,reason:reason||'Ban manuel',durationMinutes:duration?parseInt(duration):null})
+      });
+    }else{
+      await fetch('/api/admin/ban-email',{
+        method:'POST',
+        headers:hdr(),
+        body:JSON.stringify({email:value,reason:reason||'Ban manuel'})
+      });
+    }
+    showToast('Banni !');
+    document.getElementById('ban-value').value='';
+    document.getElementById('ban-reason').value='';
+    document.getElementById('ban-duration').value='';
+    loadBlocked();
+  }catch(e){
+    showToast('Erreur','error');
+  }
+}
+
+async function unbanIp(ip){
+  if(!confirm('Débloquer cette IP ?'))return;
+  await fetch(`/api/admin/blocked-ips/${encodeURIComponent(ip)}`,{method:'DELETE',headers:hdr()});
+  loadBlocked();
+  showToast('IP débannie');
+}
+
+async function unbanEmail(email){
+  if(!confirm('Débloquer cet email ?'))return;
+  await fetch(`/api/admin/ban-email/${encodeURIComponent(email)}`,{method:'DELETE',headers:hdr()});
+  loadBlocked();
+  showToast('Email débanni');
+}
+
+document.getElementById('ban-type').addEventListener('change',function(){
+  const durationGroup=document.getElementById('duration-group');
+  durationGroup.style.display=this.value==='ip'?'block':'none';
+});
+
+function fileIcon(f){
+  const ext=(f.originalName||'').split('.').pop().toLowerCase();
+  const icons={pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜️',rar:'🗜️','7z':'🗜️',mp4:'🎬',mkv:'🎬',avi:'🎬',mp3:'🎵',wav:'🎵',flac:'🎵',exe:'⚙️',msi:'⚙️',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️'};
+  return icons[ext]||'📦';
+}
+
+function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB';}
 function fmtDt(iso){return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});}
-function fmtDtFull(iso){return new Date(iso).toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
-function showToast(msg,type='success'){const w=document.getElementById('toasts');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=(type==='success'?'✅ ':'🗑️ ')+msg;w.appendChild(t);setTimeout(()=>t.remove(),3500);}
+function fmtDtFull(iso){return new Date(iso).toLocaleString('fr-FR');}
+function timeAgo(iso){
+  const s=Math.floor((Date.now()-new Date(iso))/1000);
+  if(s<60)return 'Juste maintenant';
+  if(s<3600)return Math.floor(s/60)+' min';
+  if(s<86400)return Math.floor(s/3600)+' h';
+  return Math.floor(s/86400)+' j';
+}
+function escapeHtml(s){return (s||'').toString().replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+function escapeJs(s){return (s||'').toString().replace(/\\/g,'\\\\').replace(/'/g,'\\\'').replace(/"/g,'\\"');}
+function showToast(msg,type='success'){
+  const w=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  t.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;
+  w.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
 
 checkAuth();
 </script>

@@ -3,8 +3,125 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sinix (FR) 1.7 — Fichiers</title>
+  <title>Sinix (FR) 2.0 — Fichiers</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .files-shell{max-width:1280px;margin:0 auto;padding:2rem;}
+    .files-hero{
+      display:grid;grid-template-columns:1.45fr .9fr;gap:1.25rem;
+      margin-bottom:1.4rem;position:relative;z-index:1;
+    }
+    .hero-main-panel,.hero-side-panel,.toolbar-panel,.support-panel{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+      border:1px solid var(--border);border-radius:24px;
+      backdrop-filter:blur(18px);box-shadow:0 20px 60px rgba(0,0,0,.26);
+    }
+    .hero-main-panel{padding:1.65rem;position:relative;overflow:hidden;}
+    .hero-main-panel::after{
+      content:'';position:absolute;right:-60px;bottom:-80px;width:240px;height:240px;border-radius:50%;
+      background:radial-gradient(circle,rgba(124,92,252,.24),transparent 70%);
+      pointer-events:none;
+    }
+    .hero-topline{
+      display:inline-flex;align-items:center;gap:.5rem;
+      padding:.45rem .82rem;border-radius:999px;
+      background:rgba(124,92,252,.12);border:1px solid rgba(124,92,252,.24);
+      color:var(--accent2);font-size:.78rem;font-weight:700;letter-spacing:.04em;margin-bottom:1rem;
+    }
+    .hero-main-panel h1{font-size:clamp(2.1rem,5vw,4rem);font-weight:900;letter-spacing:-.05em;line-height:1.02;margin-bottom:.9rem;}
+    .hero-main-panel p{max-width:620px;color:var(--muted);font-size:1rem;margin-bottom:1.35rem;}
+    .hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.2rem;}
+    .hero-btn{
+      display:inline-flex;align-items:center;gap:.5rem;padding:.82rem 1rem;border-radius:14px;
+      border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);
+      font-size:.88rem;font-weight:700;text-decoration:none;cursor:pointer;transition:all .2s;
+    }
+    .hero-btn:hover{border-color:rgba(124,92,252,.4);transform:translateY(-1px);background:rgba(124,92,252,.08);}
+    .hero-btn.primary{background:linear-gradient(135deg,var(--accent),var(--pink));border-color:transparent;color:#fff;box-shadow:0 12px 28px rgba(124,92,252,.34);}
+    .hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.9rem;}
+    .hero-stat{
+      padding:1rem 1.05rem;border-radius:18px;background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .hero-stat-num{font-size:1.85rem;font-weight:900;line-height:1;background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .hero-stat-label{color:var(--text);font-size:.84rem;font-weight:700;margin-top:.42rem;}
+    .hero-stat-note{color:var(--muted);font-size:.74rem;margin-top:.18rem;}
+    .hero-side-panel{padding:1.2rem;display:grid;gap:1rem;align-content:start;}
+    .side-card{
+      padding:1rem;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+    }
+    .side-card h3{font-size:.96rem;margin-bottom:.3rem;}
+    .side-card p{color:var(--muted);font-size:.82rem;line-height:1.55;}
+    .account-chip{
+      display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .72rem;border-radius:999px;
+      background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.24);color:#4ade80;font-size:.78rem;font-weight:700;margin-bottom:.75rem;
+    }
+    .side-list{display:grid;gap:.62rem;margin-top:.8rem;}
+    .side-item{
+      display:flex;gap:.65rem;align-items:flex-start;padding:.75rem;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+    }
+    .side-item strong{display:block;font-size:.83rem;margin-bottom:.08rem;}
+    .side-item span{display:block;font-size:.76rem;color:var(--muted);line-height:1.45;}
+    .toolbar-panel{padding:1rem 1rem 1.1rem;margin-bottom:1.1rem;position:relative;z-index:1;}
+    .toolbar-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:.85rem;}
+    .toolbar-title{font-size:1.02rem;font-weight:800;}
+    .toolbar-sub{color:var(--muted);font-size:.83rem;margin-top:.15rem;}
+    .toolbar-top-actions{display:flex;gap:.6rem;flex-wrap:wrap;}
+    .info-pill{
+      display:inline-flex;align-items:center;gap:.4rem;padding:.42rem .72rem;border-radius:999px;
+      background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.78rem;font-weight:700;
+    }
+    .toolbar-grid{display:grid;grid-template-columns:1fr auto auto auto;gap:.9rem;align-items:center;}
+    .section-note{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin:0 0 1rem;position:relative;z-index:1;}
+    .result-title{font-size:1rem;font-weight:800;}
+    .result-sub{color:var(--muted);font-size:.82rem;margin-top:.15rem;}
+    .support-panel{padding:1.2rem;margin-top:1.4rem;position:relative;z-index:1;overflow:hidden;}
+    .support-panel::before{
+      content:'';position:absolute;inset:auto auto -80px -80px;width:220px;height:220px;border-radius:50%;
+      background:radial-gradient(circle,rgba(88,101,242,.22),transparent 70%);
+      pointer-events:none;
+    }
+    .support-content{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;position:relative;z-index:1;}
+    .support-content h3{font-size:1.05rem;margin-bottom:.3rem;}
+    .support-content p{color:var(--muted);font-size:.88rem;max-width:620px;}
+    .support-link{
+      display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,#5865f2,#7289da);
+      color:#fff;text-decoration:none;padding:.78rem 1.2rem;border-radius:14px;font-weight:800;font-size:.88rem;box-shadow:0 10px 24px rgba(88,101,242,.35);
+    }
+    .file-card{border-radius:20px;position:relative;}
+    .file-preview{background:linear-gradient(135deg,rgba(124,92,252,.12),rgba(236,72,153,.08));}
+    .file-card .card-body{padding:1.05rem;}
+    .file-card .file-name{font-size:.95rem;}
+    .file-card .file-desc{line-height:1.55;}
+    .download-btn{border-radius:12px;}
+    .empty{padding:6rem 1.5rem;border:1px dashed rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.02);}
+    .favorite-btn{
+      position:absolute;top:10px;right:10px;background:rgba(0,0,0,.5);border:none;color:#fff;padding:8px;border-radius:10px;cursor:pointer;
+      transition:all .2s;font-size:1.2rem;
+    }
+    .favorite-btn:hover{background:rgba(0,0,0,.7);transform:scale(1.1);}
+    .favorite-btn.active{color:#fbbf24;}
+    .sort-select{
+      background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:.5rem .75rem;border-radius:10px;font-size:.85rem;cursor:pointer;
+    }
+    .pagination{display:flex;justify-content:center;gap:.5rem;margin-top:1.5rem;}
+    .page-btn{
+      padding:.5rem 1rem;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all .2s;
+    }
+    .page-btn:hover{background:rgba(124,92,252,.2);border-color:rgba(124,92,252,.5);}
+    .page-btn.active{background:linear-gradient(135deg,var(--accent),var(--pink));border-color:transparent;color:#fff;}
+    .page-btn:disabled{opacity:.5;cursor:not-allowed;}
+    @media (max-width:1100px){
+      .files-hero{grid-template-columns:1fr;}
+    }
+    @media (max-width:760px){
+      .files-shell{padding:1rem;}
+      .hero-stats{grid-template-columns:1fr;}
+      .toolbar-grid{grid-template-columns:1fr;}
+      .support-content,.section-note,.toolbar-head{align-items:stretch;}
+      .support-link,.hero-btn{width:100%;justify-content:center;}
+    }
+  </style>
 </head>
 <body>
 
@@ -16,7 +133,7 @@
   <div class="header-inner">
     <a href="/index.html" class="logo">
       <img src="/sinix-logo.png" alt="Sinix" style="width:38px;height:38px;border-radius:10px;box-shadow:0 0 20px rgba(124,92,252,.5);object-fit:cover" />
-      Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 1.7</span>
+      Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 2.0</span>
     </a>
     <nav>
       <a href="/index.html" class="active">Fichiers</a>
@@ -31,43 +148,120 @@
   </div>
 </header>
 
-<div class="hero">
-  <div class="hero-badge">✨ Partage de fichiers rapide &amp; sécurisé</div>
-  <h1><span class="gradient-text">Bienvenue<br/>sur Sinix (FR)</span></h1>
-  <p>Retrouve tous les fichiers partagés ici. Clique pour télécharger ou voir les images.</p>
-  <div class="stats">
-    <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Fichiers</div></div>
-    <div class="stat"><div class="stat-num" id="stat-images">0</div><div class="stat-label">Images</div></div>
-    <div class="stat"><div class="stat-num" id="stat-dl">0</div><div class="stat-label">Téléchargements</div></div>
-  </div>
-</div>
+<main class="files-shell">
+  <section class="files-hero">
+    <div class="hero-main-panel">
+      <div class="hero-topline">✨ Partage de fichiers rapide et sécurisé</div>
+      <h1><span class="gradient-text">Ta bibliothèque<br/>Sinix</span></h1>
+      <p>Retrouve tous les fichiers partagés, filtre rapidement ce que tu cherches, ouvre les images en aperçu et télécharge en un clic.</p>
+      <div class="hero-actions">
+        <button class="hero-btn primary" onclick="document.getElementById('search').focus()">🔎 Rechercher un fichier</button>
+        <button class="hero-btn" onclick="toggleFavoritesOnly()">⭐ Voir mes favoris</button>
+        <a class="hero-btn" href="/settings.html">⚙️ Ouvrir mes paramètres</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="stat-total">0</div>
+          <div class="hero-stat-label">Fichiers</div>
+          <div class="hero-stat-note">Tous les contenus disponibles</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="stat-images">0</div>
+          <div class="hero-stat-label">Images</div>
+          <div class="hero-stat-note">Prévisualisation instantanée</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" id="stat-dl">0</div>
+          <div class="hero-stat-label">Téléchargements</div>
+          <div class="hero-stat-note">Activité totale</div>
+        </div>
+      </div>
+    </div>
 
-<main>
-  <div class="toolbar">
-    <div class="search-box">
-      <span class="icon">🔍</span>
-      <input type="text" id="search" placeholder="Rechercher un fichier..." oninput="filterFiles()" />
+    <div class="hero-side-panel">
+      <div class="side-card">
+        <div class="account-chip">🟢 Connecté</div>
+        <h3 id="hero-user">Chargement...</h3>
+        <p>Ton espace est prêt. Tu peux parcourir les fichiers, ouvrir les images et accéder à tes paramètres depuis ici.</p>
+      </div>
+      <div class="side-card">
+        <h3>Repères rapides</h3>
+        <div class="side-list">
+          <div class="side-item">
+            <div>🖼️</div>
+            <div><strong>Aperçu image</strong><span>Clique directement sur une image pour l’ouvrir en grand.</span></div>
+          </div>
+          <div class="side-item">
+            <div>⭐</div>
+            <div><strong>Favoris</strong><span>Clique sur l'étoile pour sauvegarder un fichier.</span></div>
+          </div>
+          <div class="side-item">
+            <div>⬇️</div>
+            <div><strong>Téléchargement simple</strong><span>Un clic suffit pour récupérer le fichier choisi.</span></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="filter-btns" id="cat-filters">
-      <button class="filter-btn active" onclick="setCategory('all',this)">Tous</button>
-      <button class="filter-btn" onclick="setCategory('image',this)">🖼️ Images</button>
+  </section>
+
+  <section class="toolbar-panel">
+    <div class="toolbar-head">
+      <div>
+        <div class="toolbar-title">Parcourir les fichiers</div>
+        <div class="toolbar-sub">Utilise la recherche, les catégories et le tri pour trouver plus vite ce qu’il te faut.</div>
+      </div>
+      <div class="toolbar-top-actions">
+        <div class="info-pill" id="results-pill">📚 0 résultat</div>
+        <div class="info-pill" id="view-pill">🧩 Vue grille</div>
+      </div>
     </div>
-    <div class="view-btns">
-      <button class="view-btn active" id="btn-grid" onclick="setView('grid')">⊞</button>
-      <button class="view-btn"        id="btn-list" onclick="setView('list')">≡</button>
+
+    <div class="toolbar-grid">
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input type="text" id="search" placeholder="Rechercher un fichier, une description..." oninput="debounceFilter()" />
+      </div>
+      <div class="filter-btns" id="cat-filters">
+        <button class="filter-btn active" onclick="setCategory('all',this)">Tous</button>
+        <button class="filter-btn" onclick="setCategory('image',this)">🖼️ Images</button>
+      </div>
+      <select class="sort-select" id="sort-select" onchange="loadFiles()">
+        <option value="uploadedAt">Date (récent)</option>
+        <option value="originalName">Nom</option>
+        <option value="size">Taille</option>
+        <option value="downloads">Téléchargements</option>
+      </select>
+      <select class="sort-select" id="order-select" onchange="loadFiles()">
+        <option value="desc">Décroissant</option>
+        <option value="asc">Croissant</option>
+      </select>
+      <div class="view-btns">
+        <button class="view-btn active" id="btn-grid" onclick="setView('grid')">⊞</button>
+        <button class="view-btn" id="btn-list" onclick="setView('list')">≡</button>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <section class="section-note">
+    <div>
+      <div class="result-title">Bibliothèque disponible</div>
+      <div class="result-sub" id="results-meta">Chargement des fichiers...</div>
+    </div>
+  </section>
+
   <div id="files-grid" class="grid-view"></div>
 
-  <!-- Discord support -->
-  <div style="text-align:center;margin-top:3rem;padding:2rem;background:rgba(88,101,242,.07);border:1px solid rgba(88,101,242,.2);border-radius:16px">
-    <div style="font-size:2rem;margin-bottom:.5rem">💬</div>
-    <div style="font-weight:700;margin-bottom:.25rem">Un problème ?</div>
-    <div style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">Notre équipe est disponible sur Discord pour t'aider.</div>
-    <a href="https://discord.gg/gyCx7Ngp" target="_blank" style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,#5865f2,#7289da);color:#fff;text-decoration:none;padding:.65rem 1.5rem;border-radius:10px;font-weight:700;font-size:.9rem;box-shadow:0 4px 15px rgba(88,101,242,.35)">
-      Rejoindre le Discord →
-    </a>
-  </div>
+  <div class="pagination" id="pagination"></div>
+
+  <section class="support-panel">
+    <div class="support-content">
+      <div>
+        <h3>Besoin d’aide ?</h3>
+        <p>Si tu as un souci avec un téléchargement, un compte ou un accès, l’équipe peut t’aider rapidement sur le Discord.</p>
+      </div>
+      <a class="support-link" href="https://discord.gg/gyCx7Ngp" target="_blank">💬 Rejoindre le Discord</a>
+    </div>
+  </section>
 </main>
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
@@ -77,7 +271,7 @@
 <div class="toast-wrap" id="toasts"></div>
 
 <script>
-/* ── Particles ── */
+/* ─── Particles ───────────────────────────────────────────────────────────────── */
 const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');let pts=[];
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
 function P(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.r=Math.random()*1.4+.3;this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;this.a=Math.random()*.5+.1;this.h=[260,300,180][Math.floor(Math.random()*3)];}
@@ -86,8 +280,17 @@ P.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.
 for(let i=0;i<100;i++)pts.push(new P());
 (function loop(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(124,92,252,${.12*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}pts.forEach(p=>{p.tick();p.draw();});requestAnimationFrame(loop);})();
 
-/* ── Auth check ── */
+/* ─── State ──────────────────────────────────────────────────────────────────── */
 let sessionToken='';
+let allFiles=[];
+let currentCat='all';
+let currentView='grid';
+let currentPage=1;
+let favoritesOnly=false;
+let userFavorites=[];
+let debounceTimer;
+
+/* ─── Auth ───────────────────────────────────────────────────────────────────── */
 (async()=>{
   const t=localStorage.getItem('fs_token');
   if(!t){window.location.href='/login.html';return;}
@@ -96,8 +299,10 @@ let sessionToken='';
   if(!d.ok){window.location.href='/login.html';return;}
   sessionToken=t;
   document.getElementById('user-email').textContent=d.email;
+  document.getElementById('hero-user').textContent=d.email;
   if(d.isAdmin) document.getElementById('admin-link').style.display='';
-  loadFiles();
+  await loadFavorites();
+  await loadFiles();
 })();
 
 async function logout(){
@@ -105,29 +310,86 @@ async function logout(){
   localStorage.clear(); window.location.href='/login.html';
 }
 
-/* ── Files ── */
-let allFiles=[],currentCat='all',currentView='grid';
-
-async function loadFiles(){
-  try{const r=await fetch('/api/files');allFiles=await r.json();updateStats();filterFiles();buildCats();}
-  catch(e){showToast('Erreur de chargement','error');}
-}
-
-function updateStats(){
-  animNum('stat-total', allFiles.length);
-  animNum('stat-images', allFiles.filter(f=>f.isImage).length);
-  animNum('stat-dl', allFiles.reduce((s,f)=>s+(f.downloads||0),0));
-}
+/* ─── Helpers ────────────────────────────────────────────────────────────────── */
+function showToast(msg,type='success'){const w=document.getElementById('toasts');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;w.appendChild(t);setTimeout(()=>t.remove(),3500);}
 
 function animNum(id,target){
   const el=document.getElementById(id);let v=parseInt(el.textContent)||0;
   if(v===target)return;
   const step=Math.max(1,Math.ceil(Math.abs(target-v)/20));
-  const t=setInterval(()=>{v+=target>v?Math.min(step,target-v):-Math.min(step,v-target);el.textContent=v;if(v===target)clearInterval(t);},30);
+  const timer=setInterval(()=>{v+=target>v?Math.min(step,target-v):-Math.min(step,v-target);el.textContent=v;if(v===target)clearInterval(timer);},30);
 }
 
-function buildCats(){
-  const cats=[...new Set(allFiles.map(f=>f.category).filter(Boolean))];
+function debounceFilter(){
+  clearTimeout(debounceTimer);
+  debounceTimer=setTimeout(()=>{currentPage=1;loadFiles();},300);
+}
+
+/* ─── Favorites ──────────────────────────────────────────────────────────────── */
+async function loadFavorites(){
+  try{
+    const r=await fetch('/api/favorites',{headers:{'x-token':sessionToken}});
+    const d=await r.json();
+    userFavorites=d.favorites||[];
+  }catch(e){console.error(e);}
+}
+
+async function toggleFavorite(fileId,btn){
+  try{
+    const isFav=userFavorites.includes(fileId);
+    const method=isFav?'DELETE':'POST';
+    const r=await fetch(`/api/favorites/${fileId}`,{method,headers:{'x-token':sessionToken}});
+    const d=await r.json();
+    if(d.ok){
+      userFavorites=d.favorites||userFavorites;
+      btn.classList.toggle('active',!isFav);
+      if(favoritesOnly) loadFiles();
+    }
+  }catch(e){showToast('Erreur favoris','error');}
+}
+
+function toggleFavoritesOnly(){
+  favoritesOnly=!favoritesOnly;
+  currentPage=1;
+  loadFiles();
+}
+
+/* ─── Files ──────────────────────────────────────────────────────────────────── */
+async function loadFiles(){
+  try{
+    const sort=document.getElementById('sort-select').value;
+    const order=document.getElementById('order-select').value;
+    const search=document.getElementById('search').value;
+    let url=`/api/files?page=${currentPage}&limit=20&sort=${sort}&order=${order}`;
+    if(search)url+=`&search=${encodeURIComponent(search)}`;
+    if(currentCat!=='all')url+=`&category=${encodeURIComponent(currentCat)}`;
+
+    const r=await fetch(url);
+    const data=await r.json();
+    
+    let files=data.files;
+    if(favoritesOnly) files=files.filter(f=>userFavorites.includes(f.id));
+
+    // Update stats with full data
+    const fullData=await fetch('/api/files?limit=1000').then(r=>r.json());
+    const allFilesData=fullData.files;
+    animNum('stat-total', allFilesData.length);
+    animNum('stat-images', allFilesData.filter(f=>f.isImage).length);
+    animNum('stat-dl', allFilesData.reduce((s,f)=>s+(f.downloads||0),0));
+
+    // Build categories
+    buildCats(allFilesData);
+    
+    // Update UI
+    updateResultsMeta(data.total, search, data.page, data.totalPages);
+    renderFiles(files);
+    renderPagination(data.page, data.totalPages);
+
+  }catch(e){showToast('Erreur de chargement','error');console.error(e);}
+}
+
+function buildCats(files){
+  const cats=[...new Set(files.map(f=>f.category).filter(Boolean))];
   const wrap=document.getElementById('cat-filters');
   wrap.querySelectorAll('[data-dyn]').forEach(b=>b.remove());
   cats.filter(c=>c!=='Général').forEach(cat=>{
@@ -136,53 +398,83 @@ function buildCats(){
   });
 }
 
-function setCategory(cat,btn){currentCat=cat;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');filterFiles();}
-function setView(v){currentView=v;document.getElementById('btn-grid').classList.toggle('active',v==='grid');document.getElementById('btn-list').classList.toggle('active',v==='list');filterFiles();}
-
-function filterFiles(){
-  const q=document.getElementById('search').value.toLowerCase();
-  let f=allFiles;
-  if(currentCat==='image')f=f.filter(x=>x.isImage);
-  else if(currentCat!=='all')f=f.filter(x=>x.category===currentCat);
-  if(q)f=f.filter(x=>x.originalName.toLowerCase().includes(q)||(x.description||'').toLowerCase().includes(q));
-  renderFiles(f);
+function setCategory(cat,btn){currentCat=cat;currentPage=1;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadFiles();}
+function setView(v){
+  currentView=v;
+  document.getElementById('btn-grid').classList.toggle('active',v==='grid');
+  document.getElementById('btn-list').classList.toggle('active',v==='list');
+  document.getElementById('view-pill').textContent=v==='grid'?'🧩 Vue grille':'📃 Vue liste';
+  document.getElementById('files-grid').className=v==='grid'?'grid-view':'list-view';
 }
+
+function updateResultsMeta(count,q='',page,totalPages){
+  document.getElementById('results-pill').textContent=`📚 ${count} résultat${count>1?'s':''}`;
+  const label=currentCat==='all'?'toutes les catégories':currentCat==='image'?'les images':`la catégorie ${currentCat}`;
+  let meta=`${count} fichier${count>1?'s':''} affiché${count>1?'s':''} dans ${label}`;
+  if(page) meta+=` (page ${page}/${totalPages})`;
+  if(q) meta+=` pour "${q}"`;
+  document.getElementById('results-meta').textContent=meta+'.';
+}
+
+function renderPagination(page, totalPages){
+  const container=document.getElementById('pagination');
+  if(totalPages<=1){container.innerHTML='';return;}
+  let html='';
+  html+=`<button class="page-btn" onclick="goToPage(${page-1})" ${page===1?'disabled':''}>← Précédent</button>`;
+  for(let i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=page-1&&i<=page+1)){
+      html+=`<button class="page-btn ${i===page?'active':''}" onclick="goToPage(${i})">${i}</button>`;
+    }else if(i===page-2||i===page+2){
+      html+=`<span style="color:var(--muted);padding:0 .5rem;">...</span>`;
+    }
+  }
+  html+=`<button class="page-btn" onclick="goToPage(${page+1})" ${page===totalPages?'disabled':''}>Suivant →</button>`;
+  container.innerHTML=html;
+}
+
+function goToPage(p){currentPage=p;loadFiles();window.scrollTo({top:0,behavior:'smooth'});}
 
 const ICONS={pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜️',rar:'🗜️','7z':'🗜️',mp4:'🎬',mkv:'🎬',avi:'🎬',mp3:'🎵',wav:'🎵',flac:'🎵',exe:'⚙️',msi:'⚙️'};
 function icon(f){if(f.isImage)return'🖼️';const e=f.originalName.split('.').pop().toLowerCase();return ICONS[e]||'📦';}
-function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB';}
 function fmtDt(iso){return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});}
 
 function renderFiles(files){
   const grid=document.getElementById('files-grid');
   grid.className=currentView==='grid'?'grid-view':'list-view';
-  if(!files.length){grid.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><h3>Aucun fichier trouvé</h3><p>Essaie un autre terme.</p></div>`;return;}
+  if(!files.length){
+    grid.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><h3>Aucun fichier trouvé</h3><p>Essaie un autre terme ou change les filtres.</p></div>`;
+    return;
+  }
   const isList=currentView==='list';
   grid.innerHTML=files.map(f=>{
+    const isFav=userFavorites.includes(f.id);
     const thumbSrc=f.isImage?`/uploads/${f.filename}`:f.thumbnail?`/uploads/${f.thumbnail}`:null;
     const prev=thumbSrc
-      ?`<img src="${thumbSrc}" alt="${f.originalName}" loading="lazy" onclick="${f.isImage?`openLightbox('/uploads/${f.filename}','${f.originalName.replace(/'/g,"\\'")}');event.stopPropagation()`:''}" style="cursor:${f.isImage?'zoom-in':'default'}"/>`
+      ?`<img src="${thumbSrc}" alt="${f.originalName}" loading="lazy" onclick="${f.isImage?`openLightbox('/uploads/${f.filename}','${f.originalName.replace(/'/g,"\\'")}');event.stopPropagation()`:''}" style="cursor:${f.isImage?'zoom-in':'default'}" />`
       :`<span class="file-icon">${icon(f)}</span>`;
-    return`<div class="file-card${isList?' list-card':''}">
-      <div class="file-preview">${prev}</div>
-      <div class="card-body">
-        <div class="file-name" title="${f.originalName}">${f.originalName}</div>
-        ${f.description&&!isList?`<div class="file-desc">${f.description}</div>`:''}
-        <div class="file-meta">
-          <span class="badge${f.isImage?' image':''}">${f.category||'Général'}</span>
-          <span>📦 ${fmtSz(f.size)}</span><span>📅 ${fmtDt(f.uploadedAt)}</span><span>⬇️ ${f.downloads||0}</span>
+    return`
+      <div class="file-card${isList?' list-card':''}">
+        <button class="favorite-btn ${isFav?'active':''}" onclick="toggleFavorite('${f.id}',this);event.stopPropagation()">⭐</button>
+        <div class="file-preview">${prev}</div>
+        <div class="card-body">
+          <div class="file-name" title="${f.originalName}">${f.originalName}</div>
+          ${f.description?`<div class="file-desc">${f.description}</div>`:''}
+          <div class="file-meta">
+            <span class="badge${f.isImage?' image':''}">${f.category||'Général'}</span>
+            <span>📦 ${fmtSz(f.size)}</span><span>📅 ${fmtDt(f.uploadedAt)}</span><span>⬇️ ${f.downloads||0}</span>
+          </div>
+          <a class="download-btn" href="/api/download/${f.id}" download onclick="setTimeout(loadFiles,1200)">⬇️ Télécharger</a>
         </div>
-        <a class="download-btn" href="/api/download/${f.id}" download onclick="setTimeout(loadFiles,1200)">⬇️ Télécharger</a>
       </div>
-    </div>`;
+    `;
   }).join('');
 }
 
+/* ─── Lightbox ───────────────────────────────────────────────────────────────── */
 function openLightbox(src,alt){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox-img').alt=alt;document.getElementById('lightbox').classList.add('open');}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
-
-function showToast(msg,type='success'){const w=document.getElementById('toasts');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;w.appendChild(t);setTimeout(()=>t.remove(),3500);}
 </script>
 </body>
 </html>

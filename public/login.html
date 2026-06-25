@@ -63,32 +63,57 @@
 
     <!-- Register form -->
     <div id="form-register" style="display:none">
-      <div class="form-group">
-        <label>Adresse e-mail</label>
-        <input type="email" id="r-email" placeholder="ton@email.com" autocomplete="email"
-               onkeydown="if(event.key==='Enter') document.getElementById('r-pw').focus()" />
-      </div>
-      <div class="form-group">
-        <label>Mot de passe <span style="color:var(--muted);font-size:.78rem">(min 6 caractères)</span></label>
-        <div class="input-wrap">
-          <input type="password" id="r-pw" placeholder="••••••••" autocomplete="new-password"
-                 onkeydown="if(event.key==='Enter') document.getElementById('r-pw2').focus()" />
-          <button class="eye-btn" onclick="toggleEye('r-pw',this)" type="button">👁️</button>
+      <!-- Step 1: email + password -->
+      <div id="r-step1">
+        <div class="form-group">
+          <label>Adresse e-mail</label>
+          <input type="email" id="r-email" placeholder="ton@email.com" autocomplete="email"
+                 onkeydown="if(event.key==='Enter') document.getElementById('r-pw').focus()" />
         </div>
-      </div>
-      <div class="form-group">
-        <label>Confirmer le mot de passe</label>
-        <div class="input-wrap">
-          <input type="password" id="r-pw2" placeholder="••••••••" autocomplete="new-password"
-                 onkeydown="if(event.key==='Enter') doRegister()" />
-          <button class="eye-btn" onclick="toggleEye('r-pw2',this)" type="button">👁️</button>
+        <div class="form-group">
+          <label>Mot de passe <span style="color:var(--muted);font-size:.78rem">(min 6 caractères)</span></label>
+          <div class="input-wrap">
+            <input type="password" id="r-pw" placeholder="••••••••" autocomplete="new-password"
+                   onkeydown="if(event.key==='Enter') document.getElementById('r-pw2').focus()" />
+            <button class="eye-btn" onclick="toggleEye('r-pw',this)" type="button">👁️</button>
+          </div>
         </div>
+        <div class="form-group">
+          <label>Confirmer le mot de passe</label>
+          <div class="input-wrap">
+            <input type="password" id="r-pw2" placeholder="••••••••" autocomplete="new-password"
+                   onkeydown="if(event.key==='Enter') sendCode()" />
+            <button class="eye-btn" onclick="toggleEye('r-pw2',this)" type="button">👁️</button>
+          </div>
+        </div>
+        <div class="alert alert-error" id="r-err"></div>
+        <button class="btn btn-primary" id="r-code-btn" onclick="sendCode()" style="margin-top:.5rem">
+          Envoyer le code de vérification →
+        </button>
       </div>
-      <div class="alert alert-error"   id="r-err"></div>
-      <div class="alert alert-success" id="r-ok" style="display:none">✅ Compte créé ! Connexion en cours...</div>
-      <button class="btn btn-primary" id="r-btn" onclick="doRegister()" style="margin-top:.5rem">
-        Créer mon compte →
-      </button>
+
+      <!-- Step 2: verification code -->
+      <div id="r-step2" style="display:none">
+        <div style="text-align:center;margin-bottom:1rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">📧</div>
+          <p style="color:var(--muted);font-size:.85rem">Un code à 6 chiffres a été envoyé à</p>
+          <p id="r-email-display" style="font-weight:700;font-size:.95rem;color:var(--accent)"></p>
+        </div>
+        <div class="form-group">
+          <label>Code de vérification</label>
+          <input type="text" id="r-code" placeholder="000000" maxlength="6" inputmode="numeric"
+                 style="text-align:center;font-size:1.4rem;letter-spacing:8px;font-weight:700"
+                 onkeydown="if(event.key==='Enter') doRegister()" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+        </div>
+        <div class="alert alert-error"   id="r-err2"></div>
+        <div class="alert alert-success" id="r-ok" style="display:none">✅ Compte créé ! Connexion en cours...</div>
+        <button class="btn btn-primary" id="r-btn" onclick="doRegister()" style="margin-top:.5rem">
+          Vérifier et créer mon compte →
+        </button>
+        <button class="btn" onclick="resendCode()" style="margin-top:.5rem;background:none;color:var(--accent);border:1px solid var(--accent);width:100%">
+          Renvoyer le code
+        </button>
+      </div>
     </div>
 
     <div class="discord-hint">
@@ -154,17 +179,58 @@ async function doLogin(){
   }catch(e){shake('Erreur serveur.','l-err');btn.disabled=false;btn.textContent='Se connecter →';}
 }
 
-async function doRegister(){
+async function sendCode(){
   const email=document.getElementById('r-email').value.trim();
   const pw=document.getElementById('r-pw').value;
   const pw2=document.getElementById('r-pw2').value;
-  const btn=document.getElementById('r-btn');
+  const btn=document.getElementById('r-code-btn');
   if(!email||!pw||!pw2){shake('Remplis tous les champs.','r-err');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){shake('Entre une adresse e-mail valide.','r-err');return;}
   if(pw!==pw2){shake('Les mots de passe ne correspondent pas.','r-err');return;}
   if(pw.length<6){shake('Mot de passe trop court (min 6 caractères).','r-err');return;}
+  btn.disabled=true; btn.textContent='Envoi...';
+  try{
+    const res=await fetch('/api/send-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await res.json();
+    if(data.ok){
+      document.getElementById('r-step1').style.display='none';
+      document.getElementById('r-email-display').textContent=email;
+      document.getElementById('r-step2').style.display='block';
+      document.getElementById('r-code').value='';
+      document.getElementById('r-code').focus();
+    } else {
+      shake(data.error||'Erreur envoi code.','r-err');
+      btn.disabled=false; btn.textContent='Envoyer le code de vérification →';
+    }
+  }catch(e){shake('Erreur serveur.','r-err');btn.disabled=false;btn.textContent='Envoyer le code de vérification →';}
+}
+
+async function resendCode(){
+  const email=document.getElementById('r-email').value.trim();
+  const btn=document.querySelector('#r-step2 .btn:last-child');
+  btn.disabled=true; btn.textContent='Renvoi...';
+  try{
+    const res=await fetch('/api/send-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await res.json();
+    if(data.ok){
+      btn.textContent='✅ Code renvoyé';
+      setTimeout(()=>{btn.disabled=false;btn.textContent='Renvoyer le code';},3000);
+    } else {
+      shake(data.error||'Erreur renvoi.','r-err2');
+      btn.disabled=false; btn.textContent='Renvoyer le code';
+    }
+  }catch(e){shake('Erreur serveur.','r-err2');btn.disabled=false;btn.textContent='Renvoyer le code';}
+}
+
+async function doRegister(){
+  const email=document.getElementById('r-email').value.trim();
+  const pw=document.getElementById('r-pw').value;
+  const code=document.getElementById('r-code').value.trim();
+  const btn=document.getElementById('r-btn');
+  if(!code||code.length!==6){shake('Entre le code à 6 chiffres reçu par email.','r-err2');return;}
   btn.disabled=true; btn.textContent='Création...';
   try{
-    const res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+    const res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw,code})});
     const data=await res.json();
     if(data.ok){
       localStorage.setItem('fs_token',data.token);
@@ -173,10 +239,10 @@ async function doRegister(){
       document.getElementById('r-ok').style.display='block';
       setTimeout(()=>window.location.href='/index.html',1200);
     } else {
-      shake(data.error||'Erreur inscription.','r-err');
-      btn.disabled=false; btn.textContent='Créer mon compte →';
+      shake(data.error||'Erreur inscription.','r-err2');
+      btn.disabled=false; btn.textContent='Vérifier et créer mon compte →';
     }
-  }catch(e){shake('Erreur serveur.','r-err');btn.disabled=false;btn.textContent='Créer mon compte →';}
+  }catch(e){shake('Erreur serveur.','r-err2');btn.disabled=false;btn.textContent='Vérifier et créer mon compte →';}
 }
 </script>
 </body>
