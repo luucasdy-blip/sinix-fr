@@ -578,8 +578,6 @@ app.post('/api/send-code', registerLimiter, strictAntiVpn, async (req, res) => {
 
   if (!email) return res.status(400).json({ error: 'Email requis' });
 
-  if (!transporter) return res.status(500).json({ error: 'SMTP non configuré - contacte l\'administrateur' });
-
   const normalizedEmail = email.toLowerCase().trim();
 
   if (bannedEmails.has(normalizedEmail)) {
@@ -608,6 +606,12 @@ app.post('/api/send-code', registerLimiter, strictAntiVpn, async (req, res) => {
     expiresAt: Date.now() + VERIFICATION_EXPIRY,
     sentAt: Date.now(),
   });
+
+  if (!transporter) {
+    addLog('verification_sent', { email: emailCheck.email, ip, mode: 'dev' });
+    console.log(`\n📧  DEV MODE — Code de vérification pour ${emailCheck.email} : ${code}\n`);
+    return res.json({ ok: true, message: 'Code envoyé à ' + emailCheck.email, devCode: code });
+  }
 
   try {
     await transporter.sendMail({
