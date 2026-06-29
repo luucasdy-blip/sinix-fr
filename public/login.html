@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinix (FR) 1.7 — Connexion</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .tabs { display:flex; gap:.5rem; margin-bottom:1.75rem; background:rgba(255,255,255,.05); border-radius:12px; padding:.3rem; }
+    .tab  { flex:1; padding:.6rem; border:none; border-radius:9px; cursor:pointer; font-size:.9rem; font-weight:600; background:none; color:var(--muted); transition:all .2s; font-family:inherit; }
+    .tab.active { background:linear-gradient(135deg,var(--accent),var(--pink)); color:#fff; box-shadow:0 4px 14px rgba(124,92,252,.35); }
+    .input-wrap { position:relative; }
+    .eye-btn { position:absolute;right:.9rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:.2rem;transition:color .2s; }
+    .eye-btn:hover { color:var(--text); }
+    .back-link { display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.85rem;text-decoration:none;margin-top:1.25rem;transition:color .2s; }
+    .back-link:hover { color:var(--text); }
+    .discord-hint { display:flex;align-items:center;gap:.5rem;background:rgba(88,101,242,.12);border:1px solid rgba(88,101,242,.25);border-radius:10px;padding:.75rem 1rem;margin-top:1.25rem;font-size:.82rem;color:#a5b4fc; }
+    .discord-hint a { color:#818cf8;font-weight:700; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+    .shake { animation:shake .4s ease; }
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="orb orb4"></div><div class="orb orb5"></div>
+<div class="grid-overlay"></div>
+<div class="scanlines"></div>
+<div class="noise"></div>
+<div class="vignette"></div>
+
+<div class="login-page">
+  <div class="login-box" id="login-box">
+    <div class="login-logo">
+      <img src="/sinix-logo.png" alt="Sinix" style="width:64px;height:64px;border-radius:20px;box-shadow:0 0 30px rgba(124,92,252,.5);object-fit:cover" />
+    </div>
+    <h2>Sinix <span style="color:var(--muted);font-weight:400;font-size:.7em">(FR) 1.7</span></h2>
+    <p class="subtitle">Accède aux fichiers partagés</p>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" id="tab-login"    onclick="switchTab('login')">Connexion</button>
+      <button class="tab"        id="tab-register" onclick="switchTab('register')">Inscription</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="form-login">
+      <div class="form-group">
+        <label>Adresse e-mail</label>
+        <input type="email" id="l-email" placeholder="ton@email.com" autocomplete="email"
+               onkeydown="if(event.key==='Enter') document.getElementById('l-pw').focus()" />
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <div class="input-wrap">
+          <input type="password" id="l-pw" placeholder="••••••••" autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter') doLogin()" />
+          <button class="eye-btn" onclick="toggleEye('l-pw',this)" type="button">👁️</button>
+        </div>
+      </div>
+      <div class="alert alert-error" id="l-err"></div>
+      <button class="btn btn-primary" id="l-btn" onclick="doLogin()" style="margin-top:.5rem">
+        Se connecter →
+      </button>
+    </div>
+
+    <!-- Register form -->
+    <div id="form-register" style="display:none">
+      <div id="r-step1">
+        <div class="form-group">
+          <label>Adresse e-mail</label>
+          <input type="email" id="r-email" placeholder="ton@email.com" autocomplete="email"
+                 onkeydown="if(event.key==='Enter') document.getElementById('r-pw').focus()" />
+        </div>
+        <div class="form-group">
+          <label>Mot de passe <span style="color:var(--muted);font-size:.78rem">(min 6 caractères)</span></label>
+          <div class="input-wrap">
+            <input type="password" id="r-pw" placeholder="••••••••" autocomplete="new-password"
+                   onkeydown="if(event.key==='Enter') document.getElementById('r-pw2').focus()" />
+            <button class="eye-btn" onclick="toggleEye('r-pw',this)" type="button">👁️</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirmer le mot de passe</label>
+          <div class="input-wrap">
+            <input type="password" id="r-pw2" placeholder="••••••••" autocomplete="new-password"
+                   onkeydown="if(event.key==='Enter') doRegister()" />
+            <button class="eye-btn" onclick="toggleEye('r-pw2',this)" type="button">👁️</button>
+          </div>
+        </div>
+        <div class="alert alert-error" id="r-err"></div>
+        <button class="btn btn-primary" id="r-btn" onclick="doRegister()" style="margin-top:.5rem">
+          S'inscrire →
+        </button>
+      </div>
+
+      <div id="r-step2" style="display:none">
+        <div style="text-align:center;margin-bottom:1rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">📧</div>
+          <p style="color:var(--muted);font-size:.85rem">Un code à 6 chiffres a été envoyé à</p>
+          <p id="r-email-display" style="font-weight:700;font-size:.95rem;color:var(--accent)"></p>
+        </div>
+        <div class="form-group">
+          <label>Code de vérification</label>
+          <input type="text" id="r-code" placeholder="000000" maxlength="6" inputmode="numeric"
+                 style="text-align:center;font-size:1.4rem;letter-spacing:8px;font-weight:700"
+                 onkeydown="if(event.key==='Enter') confirmCode()" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+        </div>
+        <div class="alert alert-error"   id="r-err2"></div>
+        <div class="alert alert-success" id="r-ok" style="display:none">✅ Compte créé ! Connexion en cours...</div>
+        <button class="btn btn-primary" id="r-confirm-btn" onclick="confirmCode()" style="margin-top:.5rem">
+          Confirmer →
+        </button>
+        <button class="btn" onclick="resendCode()" style="margin-top:.5rem;background:none;color:var(--accent);border:1px solid var(--accent);width:100%">
+          Renvoyer le code
+        </button>
+      </div>
+    </div>
+
+    <div class="discord-hint">
+      💬 Un problème ? Rejoins le support sur
+      <a href="https://discord.gg/gyCx7Ngp" target="_blank">Discord</a>
+    </div>
+
+    <a href="/" class="back-link">← Voir les fichiers sans compte</a>
+  </div>
+</div>
+
+<script src="/bg.js"></script>
+<script>
+/* ── Auto-redirect si déjà connecté ── */
+(async()=>{const t=localStorage.getItem('fs_token');if(!t)return;const r=await fetch('/api/auth-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});const d=await r.json();if(d.ok)window.location.href=d.isAdmin?'/admin.html':'/index.html';})();
+
+function switchTab(tab){
+  document.getElementById('form-login').style.display    = tab==='login'    ? 'block':'none';
+  document.getElementById('form-register').style.display = tab==='register' ? 'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',    tab==='login');
+  document.getElementById('tab-register').classList.toggle('active', tab==='register');
+}
+
+function toggleEye(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁️':'🙈';}
+
+function shake(msg,errId){
+  const el=document.getElementById(errId);
+  el.textContent='❌ '+msg; el.style.display='block';
+  const box=document.getElementById('login-box');
+  box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+  setTimeout(()=>el.style.display='none',4000);
+}
+
+async function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pw=document.getElementById('l-pw').value;
+  const btn=document.getElementById('l-btn');
+  if(!email||!pw){shake('Remplis tous les champs.','l-err');return;}
+  btn.disabled=true; btn.textContent='Connexion...';
+  try{
+    const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+    const data=await res.json();
+    if(data.ok){
+      localStorage.setItem('fs_token',data.token);
+      localStorage.setItem('fs_email',data.email);
+      localStorage.setItem('fs_role', data.role||'user');
+      btn.textContent='✅ Connecté !';
+      setTimeout(()=>window.location.href=data.role==='admin'?'/admin.html':'/index.html',400);
+    } else {
+      shake(data.error||'Identifiants incorrects.','l-err');
+      btn.disabled=false; btn.textContent='Se connecter →';
+    }
+  }catch(e){shake('Erreur serveur.','l-err');btn.disabled=false;btn.textContent='Se connecter →';}
+}
+
+async function doRegister(){
+  const email=document.getElementById('r-email').value.trim();
+  const pw=document.getElementById('r-pw').value;
+  const pw2=document.getElementById('r-pw2').value;
+  const btn=document.getElementById('r-btn');
+  if(!email||!pw||!pw2){shake('Remplis tous les champs.','r-err');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){shake('Entre une adresse e-mail valide.','r-err');return;}
+  if(pw!==pw2){shake('Les mots de passe ne correspondent pas.','r-err');return;}
+  if(pw.length<6){shake('Mot de passe trop court (min 6 caractères).','r-err');return;}
+  btn.disabled=true; btn.textContent='Envoi du code...';
+  try{
+    const res=await fetch('/api/send-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await res.json();
+    if(data.ok){
+      document.getElementById('r-step1').style.display='none';
+      document.getElementById('r-email-display').textContent=email;
+      document.getElementById('r-step2').style.display='block';
+      document.getElementById('r-code').value='';
+      document.getElementById('r-code').focus();
+      if(data.devCode){
+        document.getElementById('r-err2').style.display='block';
+        document.getElementById('r-err2').textContent='🔧 Mode dev — code : ' + data.devCode;
+        document.getElementById('r-err2').style.color='#fbbf24';
+      }
+    } else {
+      shake(data.error||'Erreur envoi code.','r-err');
+      btn.disabled=false; btn.textContent="S'inscrire →";
+    }
+  }catch(e){shake('Erreur serveur.','r-err');btn.disabled=false;btn.textContent="S'inscrire →";}
+}
+
+async function confirmCode(){
+  const email=document.getElementById('r-email').value.trim();
+  const pw=document.getElementById('r-pw').value;
+  const code=document.getElementById('r-code').value.trim();
+  const btn=document.getElementById('r-confirm-btn');
+  if(!code||code.length!==6){shake('Entre le code à 6 chiffres reçu par email.','r-err2');return;}
+  btn.disabled=true; btn.textContent='Création du compte...';
+  try{
+    const res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw,code})});
+    const data=await res.json();
+    if(data.ok){
+      localStorage.setItem('fs_token',data.token);
+      localStorage.setItem('fs_email',data.email);
+      localStorage.setItem('fs_role','user');
+      document.getElementById('r-ok').style.display='block';
+      setTimeout(()=>window.location.href='/index.html',1200);
+    } else {
+      shake(data.error||'Erreur inscription.','r-err2');
+      btn.disabled=false; btn.textContent='Confirmer →';
+    }
+  }catch(e){shake('Erreur serveur.','r-err2');btn.disabled=false;btn.textContent='Confirmer →';}
+}
+
+async function resendCode(){
+  const email=document.getElementById('r-email').value.trim();
+  const btn=document.querySelector('#r-step2 .btn:last-child');
+  btn.disabled=true; btn.textContent='Renvoi...';
+  try{
+    const res=await fetch('/api/send-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await res.json();
+    if(data.ok){
+      document.getElementById('r-code').value='';
+      document.getElementById('r-code').focus();
+      btn.textContent='✅ Code renvoyé';
+      setTimeout(()=>{btn.disabled=false;btn.textContent='Renvoyer le code';},3000);
+    } else {
+      shake(data.error||'Erreur renvoi.','r-err2');
+      btn.disabled=false; btn.textContent='Renvoyer le code';
+    }
+  }catch(e){shake('Erreur serveur.','r-err2');btn.disabled=false;btn.textContent='Renvoyer le code';}
+}
+</script>
+</body>
+</html>

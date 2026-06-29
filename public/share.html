@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Téléchargement - Sinix</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .share-container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 40px;
+            background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+            backdrop-filter: blur(18px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            text-align: center;
+        }
+        .file-icon-large { font-size: 80px; margin-bottom: 20px; }
+        .share-title { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+        .share-desc { color: var(--muted); margin-bottom: 30px; }
+        .download-btn-large {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, var(--accent), var(--pink));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .download-btn-large:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(124,92,252,.4); }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+    <div class="orb orb4"></div><div class="orb orb5"></div>
+    <div class="grid-overlay"></div>
+    <div class="scanlines"></div>
+    <div class="noise"></div>
+    <div class="vignette"></div>
+
+    <div class="share-container">
+        <div class="file-icon-large" id="file-icon">📦</div>
+        <h1 class="share-title" id="file-name">Chargement...</h1>
+        <p class="share-desc" id="file-desc"></p>
+        <a class="download-btn-large" id="download-link" href="#">Télécharger</a>
+    </div>
+
+    <script src="/bg.js"></script>
+    <script>
+        async function loadShare() {
+            const pathParts = window.location.pathname.split('/');
+            const shareId = pathParts[pathParts.length - 1];
+            
+            try {
+                const r = await fetch(`/api/share/${shareId}`);
+                const d = await r.json();
+                if (d.file) {
+                    document.getElementById('file-name').textContent = d.file.originalName;
+                    document.getElementById('file-desc').textContent = d.file.description || '';
+                    
+                    const ext = (d.file.originalName || '').split('.').pop().toLowerCase();
+                    const icons = { pdf: '📄', doc: '📝', docx: '📝', xls: '📊', xlsx: '📊', zip: '🗜️', rar: '🗜️', '7z': '🗜️', mp4: '🎬', mkv: '🎬', avi: '🎬', mp3: '🎵', wav: '🎵', flac: '🎵', exe: '⚙️', msi: '⚙️', jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️' };
+                    document.getElementById('file-icon').textContent = d.file.isSite ? '🌐' : (d.file.isImage ? '🖼️' : (icons[ext] || '📦'));
+                    
+                    if (d.file.isSite) {
+                        document.getElementById('download-link').textContent = '🌐 Visiter le site';
+                        document.getElementById('download-link').href = d.file.url;
+                        document.getElementById('download-link').target = '_blank';
+                        document.getElementById('download-link').rel = 'noopener noreferrer';
+                    } else {
+                        document.getElementById('download-link').textContent = '⬇️ Télécharger';
+                        document.getElementById('download-link').href = `/api/share/download/${shareId}`;
+                    }
+                } else {
+                    document.getElementById('file-name').textContent = 'Lien invalide ou expiré';
+                    document.getElementById('download-link').style.display = 'none';
+                }
+            } catch (e) {
+                document.getElementById('file-name').textContent = 'Erreur';
+                document.getElementById('download-link').style.display = 'none';
+            }
+        }
+        loadShare();
+    </script>
+</body>
+</html>

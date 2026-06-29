@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sinix (FR) 2.0 — Fichiers</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="style.css" />
   <style>
     .files-shell{max-width:1280px;margin:0 auto;padding:2rem;}
     .files-hero{
@@ -135,15 +135,15 @@
 
 <header>
   <div class="header-inner">
-    <a href="index.html" class="logo">
-      <img src="images/sinix-logo.png" alt="Sinix" style="width:38px;height:38px;border-radius:10px;box-shadow:0 0 20px rgba(124,92,252,.5);object-fit:cover" />
+    <a href="/index.html" class="logo">
+      <img src="/sinix-logo.png" alt="Sinix" style="width:38px;height:38px;border-radius:10px;box-shadow:0 0 20px rgba(124,92,252,.5);object-fit:cover" />
       Sinix <span style="color:var(--muted);font-size:.75em;font-weight:500">(FR) 2.0</span>
     </a>
     <nav>
-      <a href="index.html" class="active">Fichiers</a>
-      <a href="sites.html">Sites Web</a>
-      <a href="settings.html">Paramètres</a>
-      <a href="admin.html" id="admin-link" style="display:none">Admin</a>
+      <a href="/index.html" class="active">Fichiers</a>
+      <a href="/sites.html">Sites Web</a>
+      <a href="/settings.html">Paramètres</a>
+      <a href="/admin.html" id="admin-link" style="display:none">Admin</a>
       <div class="user-pill" id="user-pill">
         <span class="user-dot"></span>
         <span id="user-email">—</span>
@@ -162,7 +162,7 @@
       <div class="hero-actions">
         <button class="hero-btn primary" onclick="document.getElementById('search').focus()">🔎 Rechercher un fichier</button>
         <button class="hero-btn" onclick="toggleFavoritesOnly()">⭐ Voir mes favoris</button>
-        <a class="hero-btn" href="settings.html">⚙️ Ouvrir mes paramètres</a>
+        <a class="hero-btn" href="/settings.html">⚙️ Ouvrir mes paramètres</a>
       </div>
       <div class="hero-stats">
         <div class="hero-stat">
@@ -275,20 +275,11 @@
 </div>
 <div class="toast-wrap" id="toasts"></div>
 
-<script src="js/bg.js"></script>
+<script src="/bg.js"></script>
 <script>
-/* ─── Demo Data ──────────────────────────────────────────────────────────────── */
-const demoFiles = [
-  { id: '1', originalName: 'Rapport_annuel_2023.pdf', size: 2457600, category: 'Documents', isImage: false, isSite: false, description: 'Rapport annuel de l\'entreprise 2023', downloads: 124, uploadedAt: '2023-12-15T10:30:00Z' },
-  { id: '2', originalName: 'Photo_equipe.jpg', size: 1536000, category: 'Images', isImage: true, isSite: false, description: 'Photo de l\'équipe lors de la réunion annuelle', downloads: 89, uploadedAt: '2023-11-20T14:45:00Z' },
-  { id: '3', originalName: 'Presentation_projet.pptx', size: 5120000, category: 'Documents', isImage: false, isSite: false, description: 'Présentation du nouveau projet', downloads: 56, uploadedAt: '2024-01-05T09:15:00Z' },
-  { id: '4', originalName: 'Site Web officiel', size: 0, category: 'Sites', isImage: false, isSite: true, url: 'https://example.com', description: 'Site web officiel de l\'entreprise', downloads: 0, uploadedAt: '2023-10-01T08:00:00Z' },
-  { id: '5', originalName: 'Archive_data.zip', size: 10240000, category: 'Archives', isImage: false, isSite: false, description: 'Archive des données historiques', downloads: 43, uploadedAt: '2023-09-10T16:20:00Z' }
-];
-
 /* ─── State ──────────────────────────────────────────────────────────────────── */
-let sessionToken='demo-token';
-let allFiles=demoFiles;
+let sessionToken='';
+let allFiles=[];
 let currentCat='all';
 let currentView='grid';
 let currentPage=1;
@@ -296,23 +287,24 @@ let favoritesOnly=false;
 let userFavorites=[];
 let debounceTimer;
 
-/* ─── Auth (Demo) ───────────────────────────────────────────────────────────── */
-(()=>{
-  // Demo mode: skip login, use demo user
-  const demoEmail = 'demo@example.com';
-  document.getElementById('user-email').textContent = demoEmail;
-  document.getElementById('hero-user').textContent = demoEmail;
-  // Hide admin link in demo mode
-  document.getElementById('admin-link').style.display = 'none';
-  // Load favorites from localStorage
-  userFavorites = JSON.parse(localStorage.getItem('demo-favorites') || '[]');
-  loadFiles();
+/* ─── Auth ───────────────────────────────────────────────────────────────────── */
+(async()=>{
+  const t=localStorage.getItem('fs_token');
+  if(!t){window.location.href='/login.html';return;}
+  const r=await fetch('/api/auth-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});
+  const d=await r.json();
+  if(!d.ok){window.location.href='/login.html';return;}
+  sessionToken=t;
+  document.getElementById('user-email').textContent=d.email;
+  document.getElementById('hero-user').textContent=d.email;
+  if(d.isAdmin) document.getElementById('admin-link').style.display='';
+  await loadFavorites();
+  await loadFiles();
 })();
 
-function logout(){
-  localStorage.removeItem('demo-favorites');
-  // Demo mode: just show a toast instead of redirecting
-  showToast('Déconnexion réussie (mode démo)');
+async function logout(){
+  await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:sessionToken})});
+  localStorage.clear(); window.location.href='/login.html';
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────────── */
@@ -330,22 +322,27 @@ function debounceFilter(){
   debounceTimer=setTimeout(()=>{currentPage=1;loadFiles();},300);
 }
 
-/* ─── Favorites (Demo) ──────────────────────────────────────────────────────── */
-function loadFavorites(){
-  userFavorites = JSON.parse(localStorage.getItem('demo-favorites') || '[]');
+/* ─── Favorites ──────────────────────────────────────────────────────────────── */
+async function loadFavorites(){
+  try{
+    const r=await fetch('/api/favorites',{headers:{'x-token':sessionToken}});
+    const d=await r.json();
+    userFavorites=d.favorites||[];
+  }catch(e){console.error(e);}
 }
 
-function toggleFavorite(fileId,btn){
-  const isFav=userFavorites.includes(fileId);
-  if(isFav){
-    userFavorites = userFavorites.filter(id => id !== fileId);
-  } else {
-    userFavorites.push(fileId);
-  }
-  localStorage.setItem('demo-favorites', JSON.stringify(userFavorites));
-  btn.classList.toggle('active',!isFav);
-  if(favoritesOnly) loadFiles();
-  showToast(isFav ? 'Fichier retiré des favoris' : 'Fichier ajouté aux favoris');
+async function toggleFavorite(fileId,btn){
+  try{
+    const isFav=userFavorites.includes(fileId);
+    const method=isFav?'DELETE':'POST';
+    const r=await fetch(`/api/favorites/${fileId}`,{method,headers:{'x-token':sessionToken}});
+    const d=await r.json();
+    if(d.ok){
+      userFavorites=d.favorites||userFavorites;
+      btn.classList.toggle('active',!isFav);
+      if(favoritesOnly) loadFiles();
+    }
+  }catch(e){showToast('Erreur favoris','error');}
 }
 
 function toggleFavoritesOnly(){
@@ -354,64 +351,38 @@ function toggleFavoritesOnly(){
   loadFiles();
 }
 
-/* ─── Files (Demo) ──────────────────────────────────────────────────────────── */
-function loadFiles(){
-  const sort=document.getElementById('sort-select').value;
-  const order=document.getElementById('order-select').value;
-  const search=document.getElementById('search').value.toLowerCase();
-  
-  let files = [...allFiles];
-  
-  // Filter by search
-  if(search){
-    files = files.filter(f => 
-      f.originalName.toLowerCase().includes(search) || 
-      (f.description && f.description.toLowerCase().includes(search))
-    );
-  }
-  
-  // Filter by category
-  if(currentCat !== 'all'){
-    if(currentCat === 'image'){
-      files = files.filter(f => f.isImage);
-    } else {
-      files = files.filter(f => f.category === currentCat);
-    }
-  }
-  
-  // Filter by favorites
-  if(favoritesOnly){
-    files = files.filter(f => userFavorites.includes(f.id));
-  }
-  
-  // Sort
-  files.sort((a,b) => {
-    let valA = a[sort];
-    let valB = b[sort];
-    if(typeof valA === 'string') valA = valA.toLowerCase();
-    if(typeof valB === 'string') valB = valB.toLowerCase();
-    if(order === 'desc'){
-      return valA > valB ? -1 : 1;
-    }
-    return valA < valB ? -1 : 1;
-  });
-  
-  // Update stats
-  animNum('stat-total', allFiles.length);
-  animNum('stat-images', allFiles.filter(f=>f.isImage).length);
-  animNum('stat-dl', allFiles.reduce((s,f)=>s+(f.downloads||0),0));
+/* ─── Files ──────────────────────────────────────────────────────────────────── */
+async function loadFiles(){
+  try{
+    const sort=document.getElementById('sort-select').value;
+    const order=document.getElementById('order-select').value;
+    const search=document.getElementById('search').value;
+    let url=`/api/files?page=${currentPage}&limit=20&sort=${sort}&order=${order}`;
+    if(search)url+=`&search=${encodeURIComponent(search)}`;
+    if(currentCat!=='all')url+=`&category=${encodeURIComponent(currentCat)}`;
 
-  // Build categories
-  buildCats(allFiles);
-  
-  // Pagination (demo: simple, no real pagination)
-  const totalPages = 1;
-  const total = files.length;
-  
-  // Update UI
-  updateResultsMeta(total, search, currentPage, totalPages);
-  renderFiles(files);
-  renderPagination(currentPage, totalPages);
+    const r=await fetch(url);
+    const data=await r.json();
+    
+    let files=data.files;
+    if(favoritesOnly) files=files.filter(f=>userFavorites.includes(f.id));
+
+    // Update stats with full data
+    const fullData=await fetch('/api/files?limit=1000').then(r=>r.json());
+    const allFilesData=fullData.files;
+    animNum('stat-total', allFilesData.length);
+    animNum('stat-images', allFilesData.filter(f=>f.isImage).length);
+    animNum('stat-dl', allFilesData.reduce((s,f)=>s+(f.downloads||0),0));
+
+    // Build categories
+    buildCats(allFilesData);
+    
+    // Update UI
+    updateResultsMeta(data.total, search, data.page, data.totalPages);
+    renderFiles(files);
+    renderPagination(data.page, data.totalPages);
+
+  }catch(e){showToast('Erreur de chargement','error');console.error(e);}
 }
 
 function buildCats(files){
@@ -475,7 +446,10 @@ function renderFiles(files){
   const isList=currentView==='list';
   grid.innerHTML=files.map(f=>{
     const isFav=userFavorites.includes(f.id);
-    const prev=`<span class="file-icon">${icon(f)}</span>`;
+    const thumbSrc=f.isImage?`/uploads/${f.filename}`:f.thumbnail?`/uploads/${f.thumbnail}`:null;
+    const prev=thumbSrc
+      ?`<img src="${thumbSrc}" alt="${f.originalName}" loading="lazy" onclick="${f.isImage?`openLightbox('/uploads/${f.filename}','${f.originalName.replace(/'/g,"\\'")}');event.stopPropagation()`:''}" style="cursor:${f.isImage?'zoom-in':'default'}" />`
+      :`<span class="file-icon">${icon(f)}</span>`;
     return`
       <div class="file-card${isList?' list-card':''}">
         <button class="favorite-btn ${isFav?'active':''}" onclick="toggleFavorite('${f.id}',this);event.stopPropagation()">⭐</button>
@@ -489,7 +463,7 @@ function renderFiles(files){
           </div>
           ${f.isSite
             ? `<a class="download-btn" href="${f.url}" target="_blank" rel="noopener noreferrer">🌐 Visiter le site</a>`
-            : `<button class="download-btn" onclick="showToast('Téléchargement non disponible en mode démo', 'error')">⬇️ Télécharger</button>`}
+            : `<a class="download-btn" href="/api/download/${f.id}" download onclick="setTimeout(loadFiles,1200)">⬇️ Télécharger</a>`}
         </div>
       </div>
     `;
