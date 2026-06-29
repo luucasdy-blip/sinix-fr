@@ -310,7 +310,8 @@ const ADMIN_ACCOUNTS = (() => {
   } catch (e) {}
   // Fallback to original hardcoded accounts
   return [
-    { email: 'easy.barnacle.qdbw@mask.me', password: 'SinixOnTop' }
+    { email: 'easy.barnacle.qdbw@mask.me', password: 'SinixOnTop' },
+    { email: 'angenoire596672519@gmail.com', password: 'Yoyo_667' }
   ];
 })();
 
